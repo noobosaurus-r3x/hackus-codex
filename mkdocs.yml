@@ -1,0 +1,216 @@
+site_name: Hackus Codex
+site_description: A clean, practical knowledge base for bug bounty hunters and pentesters
+site_url: https://hackus-codex.online
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: custom
+      accent: lime
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: teal
+      accent: green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.prune
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - toc.follow
+  icon:
+    logo: material/skull-crossbones
+    repo: fontawesome/brands/github
+    tag:
+      critical: material/fire
+      high: material/alert
+      medium: material/alert-circle
+      low: material/information
+      server-side: material/server
+      client-side: material/monitor
+      logic: material/brain
+      infra: material/cloud
+    admonition:
+      note: material/note-text
+      tip: material/lightbulb-on
+      warning: material/alert
+      danger: material/fire
+      bug: material/bug
+      example: material/code-tags
+      quote: material/format-quote-close
+
+extra_css:
+  - stylesheets/terminal.css
+  - stylesheets/cards.css
+
+plugins:
+  - search:
+      lang: en
+      separator: '[\s\-\.]+'
+  - tags:
+      tags_file: tags.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - attr_list
+  - md_in_html
+  - def_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra:
+  tags:
+    critical: critical
+    high: high
+    medium: medium
+    low: low
+    server-side: server-side
+    client-side: client-side
+    logic: logic
+    infra: infra
+  generator: false
+
+nav:
+  - Home: index.md
+  - 🎯 Quick Ref:
+    - quick/index.md
+    - XSS: quick/xss.md
+    - SQLi: quick/sqli.md
+    - SSRF: quick/ssrf.md
+    - SSTI: quick/ssti.md
+    - LFI: quick/lfi.md
+    - NoSQL: quick/nosql.md
+    - IDOR: quick/idor.md
+    - Auth/JWT/OAuth: quick/auth.md
+    - LLM/AI: quick/llm.md
+    - Deserialization: quick/deserialization.md
+    - Bypasses: quick/bypasses.md
+  - 🔥 Vulnerabilities:
+    - vulns/index.md
+    - Server-Side:
+      - vulns/server-side/index.md
+      - SQLi:
+        - vulns/sqli/index.md
+        - Finding: vulns/sqli/find.md
+        - Exploitation: vulns/sqli/exploit.md
+        - Bypasses: vulns/sqli/bypasses.md
+        - Escalation: vulns/sqli/escalate.md
+      - SSRF:
+        - vulns/ssrf/index.md
+        - Finding: vulns/ssrf/find.md
+        - Exploitation: vulns/ssrf/exploit.md
+        - Bypasses: vulns/ssrf/bypasses.md
+        - Escalation: vulns/ssrf/escalate.md
+      - Injection:
+        - vulns/injection/index.md
+        - Command Injection: vulns/injection/command.md
+        - XXE: vulns/injection/xxe.md
+        - SSTI: vulns/injection/ssti.md
+        - NoSQL: vulns/injection/nosql.md
+        - GraphQL: vulns/injection/graphql.md
+        - gRPC: vulns/injection/grpc.md
+        - Path Traversal: vulns/injection/path-traversal.md
+        - File Upload: vulns/injection/file-upload.md
+        - API Attacks: vulns/injection/api.md
+    - Client-Side:
+      - vulns/client-side/index.md
+      - XSS:
+        - vulns/xss/index.md
+        - Finding: vulns/xss/find.md
+        - Exploitation: vulns/xss/exploit.md
+        - Bypasses: vulns/xss/bypasses.md
+        - Escalation: vulns/xss/escalate.md
+      - CSRF: vulns/client-side/csrf.md
+      - Clickjacking: vulns/client-side/clickjacking.md
+      - DOM Clobbering: vulns/client-side/dom-clobbering.md
+      - postMessage: vulns/client-side/postmessage.md
+      - Prototype Pollution: vulns/client-side/prototype-pollution.md
+      - Tab Nabbing: vulns/client-side/tab-nabbing.md
+      - WebSocket: vulns/client-side/websocket.md
+    - Auth & Access:
+      - vulns/auth/index.md
+      - OAuth: vulns/auth/oauth.md
+      - JWT: vulns/auth/jwt.md
+      - Passkeys/FIDO2: vulns/auth/passkeys.md
+      - 2FA Bypass: vulns/auth/2fa.md
+      - Session Attacks: vulns/auth/session.md
+      - Password Reset: vulns/auth/password-reset.md
+      - SAML: vulns/auth/saml.md
+      - IDOR:
+        - vulns/idor/index.md
+        - Finding: vulns/idor/find.md
+        - Exploitation: vulns/idor/exploit.md
+        - Bypasses: vulns/idor/bypasses.md
+        - Escalation: vulns/idor/escalate.md
+      - CORS: vulns/access-control/cors.md
+      - Mass Assignment: vulns/access-control/mass-assignment.md
+    - Logic:
+      - vulns/logic/index.md
+      - Race Conditions: vulns/logic/race-conditions.md
+      - Rate Limiting: vulns/logic/rate-limiting.md
+      - Payment Bypass: vulns/logic/payment.md
+      - Captcha Bypass: vulns/logic/captcha-bypass.md
+      - Open Redirect: vulns/logic/open-redirect.md
+    - Infrastructure:
+      - vulns/infrastructure/index.md
+      - Subdomain Takeover: vulns/infrastructure/subdomain-takeover.md
+      - Cache Poisoning: vulns/infrastructure/cache-poisoning.md
+      - Request Smuggling: vulns/infrastructure/request-smuggling.md
+      - Misconfigurations: vulns/infrastructure/misconfig.md
+    - AI Security:
+      - vulns/ai-security/index.md
+      - Prompt Injection: vulns/ai-security/prompt-injection.md
+      - Agent Hijacking: vulns/ai-security/agent-hijacking.md
+      - Data Poisoning: vulns/ai-security/data-poisoning.md
+  - ⛓️ Chains:
+    - chains/index.md
+    - XSS to ATO: chains/xss-to-ato.md
+    - IDOR to ATO: chains/idor-to-ato.md
+    - SSRF to RCE: chains/ssrf-to-rce.md
+    - OAuth to ATO: chains/oauth-to-ato.md
+    - Cache to XSS: chains/cache-poison-to-xss.md
+    - XXE to SSRF: chains/xxe-to-ssrf.md
+    - SQLi to RCE: chains/sqli-to-rce.md
+    - Prototype Pollution to RCE: chains/prototype-pollution-to-rce.md
+    - Race to Bypass: chains/race-to-bypass.md
+    - Self-XSS Escalation: chains/self-xss-escalation.md
+  - 🛠️ Frameworks:
+    - frameworks/index.md
+    - FastAPI: frameworks/fastapi.md
+    - Next.js: frameworks/nextjs.md
+    - BaaS: frameworks/baas.md
+  - 🏷️ Tags: tags.md

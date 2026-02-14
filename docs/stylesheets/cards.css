@@ -1,0 +1,129 @@
+/* Card grid styling */
+.grid.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.grid.cards > ul {
+  display: contents;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.grid.cards > ul > li,
+.grid.cards > div {
+  background: var(--md-code-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.grid.cards > ul > li:hover,
+.grid.cards > div:hover {
+  border-color: var(--md-accent-fg-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Severity badges */
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-critical {
+  background: #ff4444;
+  color: white;
+}
+
+.badge-high {
+  background: #ff8800;
+  color: white;
+}
+
+.badge-medium {
+  background: #ffcc00;
+  color: black;
+}
+
+.badge-low {
+  background: #44bb44;
+  color: white;
+}
+
+/* Difficulty indicators */
+.difficulty {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.difficulty-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--md-default-fg-color--lighter);
+}
+
+.difficulty-dot.filled {
+  background: var(--md-accent-fg-color);
+}
+
+/* Quick reference boxes */
+.quick-ref {
+  background: var(--md-code-bg-color);
+  border-left: 4px solid var(--md-accent-fg-color);
+  padding: 1rem;
+  margin: 1rem 0;
+  font-family: var(--md-code-font-family);
+}
+
+/* Tag styling */
+.md-tag {
+  background: var(--md-accent-fg-color--transparent);
+  color: var(--md-accent-fg-color);
+  border-radius: 1rem;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  margin-right: 0.25rem;
+}
+
+/* Hero section */
+.hero {
+  text-align: center;
+  padding: 2rem 0 3rem;
+}
+
+.hero p:first-of-type {
+  font-size: 1.4rem;
+  color: var(--md-default-fg-color);
+  margin-bottom: 0.5rem;
+}
+
+.hero p:nth-of-type(2) {
+  font-size: 1rem;
+  color: var(--md-default-fg-color--light);
+  margin-bottom: 2rem;
+}
+
+/* Button styling */
+.md-button {
+  margin: 0.25rem;
+}
+
+/* Stats table - clean look */
+.md-typeset table:has(td:first-child:empty) {
+  border: none;
+}
+
+.md-typeset table:has(td:first-child:empty) td,
+.md-typeset table:has(td:first-child:empty) th {
+  border: none;
+  padding: 0.5rem 1rem;
+}
