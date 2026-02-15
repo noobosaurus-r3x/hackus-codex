@@ -145,6 +145,7 @@ nav:
         - gRPC: vulns/injection/grpc.md
         - Path Traversal: vulns/injection/path-traversal.md
         - File Upload: vulns/injection/file-upload.md
+        - CRLF Injection: vulns/injection/crlf.md
         - API Attacks: vulns/injection/api.md
     - Client-Side:
       - vulns/client-side/index.md
@@ -184,7 +185,7 @@ nav:
       - Rate Limiting: vulns/logic/rate-limiting.md
       - Payment Bypass: vulns/logic/payment.md
       - Captcha Bypass: vulns/logic/captcha-bypass.md
-      - Open Redirect: vulns/logic/open-redirect.md
+      - Open Redirect: vulns/client-side/open-redirect.md
     - Infrastructure:
       - vulns/infrastructure/index.md
       - Subdomain Takeover: vulns/infrastructure/subdomain-takeover.md
