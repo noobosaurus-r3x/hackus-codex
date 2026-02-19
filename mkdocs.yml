@@ -143,6 +143,7 @@ nav:
         - NoSQL: vulns/injection/nosql.md
         - GraphQL: vulns/injection/graphql.md
         - gRPC: vulns/injection/grpc.md
+        - ORM Leaks: vulns/injection/orm-leaks.md
         - Path Traversal: vulns/injection/path-traversal.md
         - File Upload: vulns/injection/file-upload.md
         - API Attacks: vulns/injection/api.md
