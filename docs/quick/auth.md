@@ -354,6 +354,9 @@ Host: attacker.com
 - [ ] Missing/static state parameter
 - [ ] XSS on callback domain
 - [ ] Client secret in apps/JS
+- [ ] State contains a URL? → wildcard subdomain validation bypass (shared OAuth)
+- [ ] Shared client_id across tenants? → cross-tenant code theft
+- [ ] prompt=none with attacker-controlled state = silent attack
 
 ### JWT
 - [ ] Modify payload, test if signature validated
