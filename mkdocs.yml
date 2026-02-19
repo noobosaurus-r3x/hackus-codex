@@ -162,6 +162,7 @@ nav:
       - Prototype Pollution: vulns/client-side/prototype-pollution.md
       - Tab Nabbing: vulns/client-side/tab-nabbing.md
       - WebSocket: vulns/client-side/websocket.md
+      - XS-Leaks: vulns/client-side/xs-leaks.md
     - Auth & Access:
       - vulns/auth/index.md
       - OAuth: vulns/auth/oauth.md
