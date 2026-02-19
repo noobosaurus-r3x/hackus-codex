@@ -97,6 +97,16 @@ From cache manipulation to persistent XSS:
 - Fat GET → cache poison
 - Static extension abuse
 
+### [OAuth Wildcard State Bypass → Cross-Tenant ATO](oauth-wildcard-state-bypass.md)
+
+Shared OAuth infrastructure with wildcard subdomain allowlists → cross-tenant authorization code theft:
+
+- Shared OAuth client across all tenants (SaaS platforms)
+- State URL validated against `*.saas.com` (wildcard) → any tenant is valid target
+- Attacker controls a tenant → routes auth codes to their endpoint
+- `prompt=none` for silent attack (zero user interaction with active session)
+- Open redirect chaining if no direct subdomain control
+
 ### [XXE → SSRF → Internal Access](xxe-to-ssrf.md)
 
 Weaponizing XML parsers to reach internal infrastructure:
