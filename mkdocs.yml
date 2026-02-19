@@ -143,6 +143,7 @@ nav:
         - NoSQL: vulns/injection/nosql.md
         - GraphQL: vulns/injection/graphql.md
         - gRPC: vulns/injection/grpc.md
+        - ORM Leaks: vulns/injection/orm-leaks.md
         - Path Traversal: vulns/injection/path-traversal.md
         - File Upload: vulns/injection/file-upload.md
         - API Attacks: vulns/injection/api.md
@@ -161,6 +162,7 @@ nav:
       - Prototype Pollution: vulns/client-side/prototype-pollution.md
       - Tab Nabbing: vulns/client-side/tab-nabbing.md
       - WebSocket: vulns/client-side/websocket.md
+      - XS-Leaks: vulns/client-side/xs-leaks.md
     - Auth & Access:
       - vulns/auth/index.md
       - OAuth: vulns/auth/oauth.md
@@ -208,6 +210,7 @@ nav:
     - Prototype Pollution to RCE: chains/prototype-pollution-to-rce.md
     - Race to Bypass: chains/race-to-bypass.md
     - Self-XSS Escalation: chains/self-xss-escalation.md
+    - OAuth Wildcard State Bypass: chains/oauth-wildcard-state-bypass.md
   - 🛠️ Frameworks:
     - frameworks/index.md
     - FastAPI: frameworks/fastapi.md
