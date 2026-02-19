@@ -208,6 +208,7 @@ nav:
     - Prototype Pollution to RCE: chains/prototype-pollution-to-rce.md
     - Race to Bypass: chains/race-to-bypass.md
     - Self-XSS Escalation: chains/self-xss-escalation.md
+    - OAuth Wildcard State Bypass: chains/oauth-wildcard-state-bypass.md
   - 🛠️ Frameworks:
     - frameworks/index.md
     - FastAPI: frameworks/fastapi.md

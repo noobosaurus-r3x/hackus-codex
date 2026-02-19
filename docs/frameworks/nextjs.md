@@ -417,6 +417,77 @@ Prove vulnerabilities with:
 
 ---
 
+## Advanced: Internal Cache Poisoning (2025)
+
+**Research:** "Next.js, cache, and chains: the stale elixir" by Rachid Allam — PortSwigger Top 10 2025, #7.
+
+Unlike **CDN/reverse-proxy** cache poisoning (well understood), this targets Next.js's **internal cache layer** — invisible to external caches, harder to detect.
+
+### How Internal Caching Works
+
+Next.js 13+ (App Router) has an internal `fetch` cache that persists across requests:
+
+```javascript
+// This response is internally cached by Next.js
+const data = await fetch('https://internal-api/endpoint', {
+  next: { revalidate: 3600 }  // Cache for 1 hour
+});
+```
+
+### The Chain Attack
+
+```
+1. Craft request that poisons the internal cache
+2. Next.js caches the malicious response internally
+3. ALL subsequent users get the poisoned response
+4. Even if CDN cache is cleared → Next.js internal cache still poisoned
+```
+
+### Detection
+
+```bash
+# Check for internal Next.js cache headers
+curl -I https://target.com/api/data
+# Look for: x-nextjs-cache: HIT/MISS/STALE
+# HIT = cached internally, poisoning may persist
+
+# Test cache behavior
+curl https://target.com/api/data   # First request
+curl https://target.com/api/data   # Second - x-nextjs-cache: HIT?
+```
+
+### Attack Vector: Unkeyed Headers in fetch()
+
+```bash
+# If the fetch() inside Next.js includes an unkeyed header:
+# Attacker controls header → controls cached response
+
+# Test: does varying X-Forwarded-Host change response?
+curl -H "X-Forwarded-Host: evil.com" https://target.com/page
+# If response contains evil.com → potential cache poisoning
+```
+
+### Exploitation Pattern
+
+```bash
+# 1. Find unkeyed input affecting internal fetch
+curl -H "X-Custom-Header: POISON" https://target.com/page-that-fetches
+
+# 2. Confirm cache pollution
+curl https://target.com/page-that-fetches  # No header — still POISON?
+
+# 3. Chain with XSS
+# Poison the cache with XSS payload in a field
+# All users served XSS from cache → ATO at scale
+```
+
+**Why it matters for bug bounty:**
+- Standard cache headers don't show internal Next.js cache state
+- Cache clearing (CDN purge) doesn't fix internal poisoning
+- Requires Next.js App Router (13+) with internal fetch caching
+
+---
+
 ## References
 
 - [Next.js Security Headers](https://nextjs.org/docs/app/building-your-application/configuring/security-headers)
@@ -424,3 +495,4 @@ Prove vulnerabilities with:
 - [Next.js Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware)
 - [Server Actions Security](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)
 - [React Server Components](https://react.dev/blog/2023/03/22/react-labs-what-we-have-been-working-on-march-2023#react-server-components)
+- [Next.js cache chains: the stale elixir](https://zhero-web-sec.github.io/research-and-things/nextjs-cache-and-chains-the-stale-elixir) — Rachid Allam, 2025

